@@ -7,7 +7,7 @@
 
 **Текущая версия ядра:**
 
-![old](https://github.com/MIranaNightshade/otus-linux-professional/blob/main/linux%20kernel/screenshots/old_kernel.png)
+   ![old](https://github.com/MIranaNightshade/otus-linux-professional/blob/main/linux%20kernel/screenshots/old_kernel.png)
 
 
 Найдем новую версию ядра в репозитории, у меня последняя stable версия, поэтому поищем в ветке backports: https://packages.debian.org/trixie-backports/amd64/kernel/.

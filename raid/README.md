@@ -100,4 +100,12 @@
 
    ![mount](https://github.com/MIranaNightshade/otus-linux-professional/blob/main/raid/screen/mount.png)
 
+   Можно еще сделать записи в /etc/fstab чтобы они монтировались автоматически призагрузке:
+
+   ```
+   for i in $(seq 1 5); do sudo echo "/dev/md123p$i  /mnt/raid/part$i ext4  defaults,nofail  0  2" | sudo tee -a /etc/fstab; done
+   systemctl daemon-reload
+   mount -a
+   ```
+
    

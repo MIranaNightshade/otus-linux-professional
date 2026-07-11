@@ -48,7 +48,7 @@
 
    ![mdadm_d](https://github.com/MIranaNightshade/otus-linux-professional/tree/main/raid/screen/mdadm_d.png)
 
-   3) **Сломаем и починим рейд массив:**
+3) **Сломаем и починим рейд массив:**
 
       *Пометим один диск как fail и проверим состояние массива*
 
@@ -67,4 +67,29 @@
       ```
      ![mdadm_del_recovery](https://github.com/MIranaNightshade/otus-linux-professional/tree/main/raid/screen/del_recovery.png)
 
-      Создадим GPT таблицу, пять разделов и смонтируем их в системе
+     
+4) **Создадим GPT таблицу, пять разделов и смонтируем их в системе.**
+
+     *Создадим 5 логических разделов*
+   
+     ```
+     mirana@debian:~$ sudo parted -s /dev/md123 mklabel gpt
+     mirana@debian:~$ sudo parted -s /dev/md123 mkpart primary ext4 0% 20%
+     mirana@debian:~$ sudo parted -s /dev/md123 mkpart primary ext4 20% 40%
+     mirana@debian:~$ sudo parted -s /dev/md123 mkpart primary ext4 40% 60%
+     mirana@debian:~$ sudo parted -s /dev/md123 mkpart primary ext4 60% 80%
+     mirana@debian:~$ sudo parted -s /dev/md123 mkpart primary ext4 80% 100%
+     ```
+     Проверим результат:
+
+   ![mdadm_del_recovery](https://github.com/MIranaNightshade/otus-linux-professional/tree/main/raid/screen/parted_result.png)
+
+   *Создадим фаловую систему на каждом разделе*
+
+    ```
+    for i in $(seq 1 5); do sudo mkfs.ext4 /dev/md123p$i; done
+    ```
+
+   ![ext4](https://github.com/MIranaNightshade/otus-linux-professional/tree/main/raid/screen/ext4.png)
+
+     

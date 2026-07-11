@@ -92,4 +92,12 @@
 
    ![ext4](https://github.com/MIranaNightshade/otus-linux-professional/tree/main/raid/screen/ext4.png)
 
-     
+   *Смонтируем все логические разделы*
+
+   ```
+   for i in $(seq 1 5); do sudo mount /dev/md123p$i /mnt/raid/part$i; done
+   ```
+
+   ![mount](https://github.com/MIranaNightshade/otus-linux-professional/tree/main/raid/screen/mount.png)
+
+   

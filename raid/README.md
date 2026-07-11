@@ -18,7 +18,7 @@
    sudo fdisk -l
    ```
 
-   ![blk_inf](https://github.com/MIranaNightshade/otus-linux-professional/tree/main/raid/screen/blk_inf.png)
+   ![blk_inf](https://github.com/MIranaNightshade/otus-linux-professional/blob/main/raid/screen/blk_inf.png)
 
 2) **Создадим рейд массив:**
     *Обнулить суперблоки:*
@@ -44,9 +44,9 @@
    ```
    sudo mdadm -D /dev/md123
    ```
-   ![md_stat](https://github.com/MIranaNightshade/otus-linux-professional/tree/main/raid/screen/md_create_stat.png)
+   ![md_stat](https://github.com/MIranaNightshade/otus-linux-professional/blob/main/raid/screen/md_create_stat.png)
 
-   ![mdadm_d](https://github.com/MIranaNightshade/otus-linux-professional/tree/main/raid/screen/mdadm_d.png)
+   ![mdadm_d](https://github.com/MIranaNightshade/otus-linux-professional/blob/main/raid/screen/mdadm_d.png)
 
 3) **Сломаем и починим рейд массив:**
 
@@ -57,7 +57,7 @@
       sudo mdadm -D /dev/md123
       cat /proc/mdstat
       ```
-     ![mdadm_fail](https://github.com/MIranaNightshade/otus-linux-professional/tree/main/raid/screen/mdadm_fail.png)
+     ![mdadm_fail](https://github.com/MIranaNightshade/otus-linux-professional/blob/main/raid/screen/mdadm_fail.png)
 
       *Удалим "сломанный" диск из массива и добавим "новый исправный" диск в массив:*
 
@@ -65,7 +65,7 @@
       sudo mdadm /dev/md123 --remove /dev/sdc
       sudo mdadm /dev/md123 --add /dev/sdc
       ```
-     ![mdadm_del_recovery](https://github.com/MIranaNightshade/otus-linux-professional/tree/main/raid/screen/del_recovery.png)
+     ![mdadm_del_recovery](https://github.com/MIranaNightshade/otus-linux-professional/blob/main/raid/screen/del_recovery.png)
 
      
 4) **Создадим GPT таблицу, пять разделов и смонтируем их в системе.**
@@ -82,7 +82,7 @@
      ```
      Проверим результат:
 
-   ![mdadm_del_recovery](https://github.com/MIranaNightshade/otus-linux-professional/tree/main/raid/screen/parted_result.png)
+   ![mdadm_del_recovery](https://github.com/MIranaNightshade/otus-linux-professional/blob/main/raid/screen/parted_result.png)
 
    *Создадим фаловую систему на каждом разделе*
 
@@ -90,7 +90,7 @@
     for i in $(seq 1 5); do sudo mkfs.ext4 /dev/md123p$i; done
     ```
 
-   ![ext4](https://github.com/MIranaNightshade/otus-linux-professional/tree/main/raid/screen/ext4.png)
+   ![ext4](https://github.com/MIranaNightshade/otus-linux-professional/blob/main/raid/screen/ext4.png)
 
    *Смонтируем все логические разделы*
 
@@ -98,6 +98,6 @@
    for i in $(seq 1 5); do sudo mount /dev/md123p$i /mnt/raid/part$i; done
    ```
 
-   ![mount](https://github.com/MIranaNightshade/otus-linux-professional/tree/main/raid/screen/mount.png)
+   ![mount](https://github.com/MIranaNightshade/otus-linux-professional/blob/main/raid/screen/mount.png)
 
    

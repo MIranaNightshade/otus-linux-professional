@@ -33,7 +33,7 @@
 sudo update-grub
 sudo grub-set-default 0
 ```
-5) Проверим версию ядра после ребута:
+5) Проверим версию ядра после перезагрузки:
 
    ![new_kernel](https://github.com/MIranaNightshade/otus-linux-professional/blob/main/linux%20kernel/screenshots/new_kernel.png)    
    

@@ -2,10 +2,8 @@
 ### Задачи:
 1. [Уменьшить том под / до 8G.](#title1)
 2. [Выделить том под /var - сделать в mirror.](#title2)
-3. [Выделить том под /home.](#title3)
-4. [/home - сделать том для снапшотов.](#title4)
-5. [Прописать монтирование в fstab. Попробовать с разными опциями и разными файловыми системами (на выбор).](#title5)
-6. [Работа со снапшотами:](#title6)
+3. [Выделить том под /home и смонтировать его в fstab с разными опциями](#title3)
+4. [Работа со снапшотами:](#title4)
     - *сгенерить файлы в /home/;*
     - *снять снапшот;*
     - *удалить часть файлов;*
@@ -179,7 +177,7 @@ mount /dev/vg_var/lv_var /var
 
 ![home](https://github.com/MIranaNightshade/otus-linux-professional/blob/main/lvm/screen/home.png)
 
-#### 4. <a id="title4">Смонтируем /home в /etc/fstab.</a>
+**Смонтируем /home в /etc/fstab**
 
 ```
 UUID=5d751fae-c721-478e-88b2-15f33e631af0  /home  ext4  defaults,nosuid,noexec  0  2
@@ -188,7 +186,7 @@ UUID=5d751fae-c721-478e-88b2-15f33e631af0  /home  ext4  defaults,nosuid,noexec  
  - noexec запретим исполнение бинарных файлов
 ![home](https://github.com/MIranaNightshade/otus-linux-professional/blob/main/lvm/screen/home_fstab1.png)
 
-#### 5. <a id="title5">Работа со снапшотами.</a>
+#### 4. <a id="title4">Работа со снапшотами.</a>
 
 1) Создадим снапшот /home
 

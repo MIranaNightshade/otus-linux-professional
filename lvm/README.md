@@ -154,7 +154,61 @@ root@debianv2:/#
 
 #### 2. <a id="title2">Выделим том под /var в mirror.</a>
 
-**1) Создадим новый pv vg и lv(mirror) для /var**
+**1) Создадим новый pv vg и lv(mirror) для /var. Создадим на новом lv_var файловую систему ext4 и смонтируем все в /mnt/**
 
 ![mirror](https://github.com/MIranaNightshade/otus-linux-professional/blob/main/lvm/screen/var_mirror.png)
 
+**2) Скопируем содержимае /var на новый vg_var (который смонтирован в mnt) и смонтируем lv_var в /var**
+
+```
+cp -aR /var/* /mnt/
+umount /mnt
+mount /dev/vg_var/lv_var /var
+```
+Отредактируем /etc/fstab чтобы lv_var сразу монтировался при загрузке 
+
+![fstab](https://github.com/MIranaNightshade/otus-linux-professional/blob/main/lvm/screen/fstab_var.png)
+
+Проверим что получилось после перезагрузки:
+
+![fstab](https://github.com/MIranaNightshade/otus-linux-professional/blob/main/lvm/screen/flsblk_var.png)
+
+#### 3. <a id="title3">Выделим том под /home и смонтируем вего в fstab.</a>
+
+**Выделим том под /home**
+
+![home](https://github.com/MIranaNightshade/otus-linux-professional/blob/main/lvm/screen/home.png)
+
+#### 4. <a id="title4">Смонтируем /home в /etc/fstab.</a>
+
+```
+UUID=5d751fae-c721-478e-88b2-15f33e631af0  /home  ext4  defaults,nosuid,noexec  0  2
+```
+ - nosuid Запретим действие suid и sgid битов.
+ - noexec запретим исполнение бинарных файлов
+![home](https://github.com/MIranaNightshade/otus-linux-professional/blob/main/lvm/screen/home_fstab1.png)
+
+#### 5. <a id="title5">Работа со снапшотами.</a>
+
+1) Создадим снапшот /home
+
+```
+root@debianv2:~# lvs
+  LV        VG        Attr       LSize   Pool Origin Data%  Meta%  Move Log Cpy%Sync Convert
+  home_lv   vg-debian -wi-ao----   3,00g
+  lv-debian vg-debian -wi-ao----   8,00g
+  lv_var    vg_var    rwi-aor--- 900,00m                                    100,00
+root@debianv2:~# lvcreate -n home_snap -l 200M -s /dev/vg-debian/home_lv
+  Invalid argument for --extents: 200M
+  Error during parsing of command line.
+root@debianv2:~# lvcreate -n home_snap -L 200M -s /dev/vg-debian/home_lv
+  Logical volume "home_snap" created.
+root@debianv2:~#
+```
+2) Удалим файлы из /home и восстановим из снапшот
+
+![rmhome](https://github.com/MIranaNightshade/otus-linux-professional/blob/main/lvm/screen/remove_home.png)
+
+3) Восстановим файлы из снапшота
+
+![recovery](https://github.com/MIranaNightshade/otus-linux-professional/blob/main/lvm/screen/recovery_home.png)

@@ -167,11 +167,11 @@ mount /dev/vg_var/lv_var /var
 ```
 Отредактируем /etc/fstab чтобы lv_var сразу монтировался при загрузке 
 
-![fstab](https://github.com/MIranaNightshade/otus-linux-professional/blob/main/lvm/screen/fstab_var.png)
+![fstab](https://github.com/MIranaNightshade/otus-linux-professional/blob/main/lvm/screen/fastab_var.png)
 
 Проверим что получилось после перезагрузки:
 
-![fstab](https://github.com/MIranaNightshade/otus-linux-professional/blob/main/lvm/screen/flsblk_var.png)
+![fstab](https://github.com/MIranaNightshade/otus-linux-professional/blob/main/lvm/screen/lsblk_var.png)
 
 #### 3. <a id="title3">Выделим том под /home и смонтируем вего в fstab.</a>
 

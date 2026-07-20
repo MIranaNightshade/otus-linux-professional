@@ -164,4 +164,10 @@ zfs get available otus - для определения свободного ме
 
 #### 3. Работа со снапшотами
 
+Скачаем снапшот, восстановим файловую систему из снапшота и найдем скрытое сообщение:
+
+![download](https://github.com/MIranaNightshade/otus-linux-professional/blob/main/zfs/screen/download.png)
+
+
+![secret](https://github.com/MIranaNightshade/otus-linux-professional/blob/main/zfs/screen/secret.png)
 

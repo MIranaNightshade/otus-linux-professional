@@ -51,5 +51,26 @@ exportfs -s
 
 ![client](https://github.com/MIranaNightshade/otus-linux-professional/blob/main/nfs/screen/client-server-check.png)
 
+*Настроим автоматическое монтирование:*
+
+```
+echo "192.168.88.100:/srv/share/ /mnt/nfs nfs vers=3,noauto,x-systemd.automount 0 0" | tee -a /etc/fstab
+```
+
+- 192.168.88.100:/srv/share/ - что монтируем
+- /mnt/nfs - куда монтируем
+- nfs - используем протокол nfs
+- vers=3,noauto,x-systemd.automount используем протокол nfs версии 3, отключим автоматическое монтирование при старте системы,
+       включим монтирование через systemd (директория монтируется только если какой-то процесс к ней обращается)
 
 
+*Перечитаем конфигурацию systemd и перезапустим  remote-fs.targhet:*
+
+  ```
+  systemctl daemon-reload
+  systemctl restart remote-fs.target
+  ```
+
+Проверим монтирование:
+
+![mount-check](https://github.com/MIranaNightshade/otus-linux-professional/blob/main/nfs/screen/mount-check.png)

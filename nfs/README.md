@@ -74,3 +74,17 @@ echo "192.168.88.100:/srv/share/ /mnt/nfs nfs vers=3,noauto,x-systemd.automount 
 Проверим монтирование:
 
 ![mount-check](https://github.com/MIranaNightshade/otus-linux-professional/blob/main/nfs/screen/mount-check.png)
+
+**Проверка:**
+
+**Создадим с клиента client_file и с сервера server_file и проверим работу nfs:**
+
+сервер:
+
+![server](https://github.com/MIranaNightshade/otus-linux-professional/blob/main/nfs/screen/server_file.png)
+
+клиент:
+
+![client](https://github.com/MIranaNightshade/otus-linux-professional/blob/main/nfs/screen/client_file.png)
+
+

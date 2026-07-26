@@ -87,4 +87,16 @@ echo "192.168.88.100:/srv/share/ /mnt/nfs nfs vers=3,noauto,x-systemd.automount 
 
 ![client](https://github.com/MIranaNightshade/otus-linux-professional/blob/main/nfs/screen/client_file.png)
 
+Перезагружаем клиент, проверяем наличие созданных файлов:
+
+![client_re](https://github.com/MIranaNightshade/otus-linux-professional/blob/main/nfs/screen/client_reboot.png)
+
+Перезагружаем сервер:
+
+![client_re](https://github.com/MIranaNightshade/otus-linux-professional/blob/main/nfs/screen/server_reboot.png)
+
+Финальные проверки на клиенте: 
+
+![client_re](https://github.com/MIranaNightshade/otus-linux-professional/blob/main/nfs/screen/client_check1.png)
+
 

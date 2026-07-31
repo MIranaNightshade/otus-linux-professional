@@ -6,8 +6,8 @@
 3. Установить систему с LVM, после чего переименовать VG.
 
 #### 1. Включим отображение меню GRUB.
-Отредактируем /etc/default/grub
-Закомментируем GRUB_TIMEOUT_STYLE=hidden и выставим timeout:
+- Отредактируем /etc/default/grub
+- Закомментируем GRUB_TIMEOUT_STYLE=hidden и выставим timeout:
 
 ```
 GRUB_DEFAULT=0
@@ -17,6 +17,7 @@ GRUB_DISTRIBUTOR=`( . /etc/os-release && echo ${NAME} )`
 GRUB_CMDLINE_LINUX_DEFAULT="quiet"
 GRUB_CMDLINE_LINUX=""
 ```
+- Выполним update-grub чтобы обновить конфигурацию GRUB.
 
 Проверим результат:
 

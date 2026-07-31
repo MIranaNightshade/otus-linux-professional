@@ -43,3 +43,5 @@ mount -o remount,rw /
 
 ![recovery](https://github.com/MIranaNightshade/otus-linux-professional/blob/main/grub/screen/recovery.png)
 
+Минусы:
+- Нужно знать пароль от root

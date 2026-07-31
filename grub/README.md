@@ -39,6 +39,7 @@ mount -o remount,rw /
 ```
 ![rw](https://github.com/MIranaNightshade/otus-linux-professional/blob/main/grub/screen/rw.png)
 
+**Способ 2.** В меня GRUB выбираем advanced options и далее пункт с recovery mode. 
 
-
+![recovery](https://github.com/MIranaNightshade/otus-linux-professional/blob/main/grub/screen/recovery.png)
 

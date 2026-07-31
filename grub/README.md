@@ -17,6 +17,9 @@ GRUB_DISTRIBUTOR=`( . /etc/os-release && echo ${NAME} )`
 GRUB_CMDLINE_LINUX_DEFAULT="quiet"
 GRUB_CMDLINE_LINUX=""
 ```
-   
+
+Проверим результат:
+
+![](https://github.com/MIranaNightshade/otus-linux-professional/blob/main/grub/screen/menu.gif)
 
 

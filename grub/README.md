@@ -68,5 +68,5 @@ sudo cp /boot/grub/grub.cfg ~
 ```
 Отредактируем /boot/grub/grub.cfg поменяем все записи vg--dedian на vg--otus (теперь тут два -) и перезагрузим VM.
 
-![](https://github.com/MIranaNightshade/otus-linux-professional/blob/main/grub/screen/fin.gif)
+![](https://github.com/MIranaNightshade/otus-linux-professional/blob/main/grub/screen/fin1.gif)
 

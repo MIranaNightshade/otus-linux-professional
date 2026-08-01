@@ -45,3 +45,25 @@ mount -o remount,rw /
 
 Минусы:
 - Нужно знать пароль от root
+
+#### 3. Переименуем volume group и отредактируем grub 
+Переименуем VG с помощью команды:
+
+```
+vgrename vg-debian vg-otus
+```
+
+было:
+
+![](https://github.com/MIranaNightshade/otus-linux-professional/blob/main/grub/screen/vgs.png)
+
+стало:
+
+![](https://github.com/MIranaNightshade/otus-linux-professional/blob/main/grub/screen/vgs-new.png)
+
+На всякий случай сначала скопируем /boot/grub/grub.cfg к себе в домашнюю директорию перед внесением изменений.
+
+```
+sudo cp /boot/grub/grub.cfg ~
+```
+Отредактируем /boot/grub/grub.cfg поменяем все записи vg--dedian на vg--otus (теперь тут два -) и перезагрузим VM.

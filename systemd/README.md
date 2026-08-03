@@ -35,19 +35,20 @@ root@debian-lvm:~#
 
 ```
 root@debian-lvm:~# cat << EOF > /opt/watchlog.sh
-> #!/bin/bash
+>  #!/bin/bash
 >
-> WORD=$1
-> LOG=$2
-> DATE=`date`
+>  WORD=\$1
+>  LOG=\$2
+>  DATE=\`date\`
 >
-> if grep $WORD $LOG &> /dev/null      
-> then
-> logger "$DATE: I found word, Master!"
-> else
-> exit 0
-> fi
+>  if grep \$WORD \$LOG &> /dev/null
+>  then
+>  logger "\$DATE: I found word, Master!"
+>  else
+>  exit 0
+>  fi
 > EOF
+root@debian-lvm:~# 
 ```
 Сделаем скрипт исполняемым: 
 
@@ -69,7 +70,30 @@ root@debian-lvm:~# cat << EOF > /etc/systemd/system/watchlog.service
 > [Service]
 > Type=oneshot
 > EnvironmentFile=/etc/default/watchlog
-> ExecStart=/opt/watchlog.sh $WORD $LOG
+> ExecStart=/opt/watchlog.sh \$WORD \$LOG
+> EOF
+root@debian-lvm:~# 
+```
+
+**Создадим таймер:**
+- OnActiveSec=1 выполнить первый раз через 1 секунду после запуска таймера, если не выставить то нужно будет первый раз запустить сервис руками иначе не будет точки отсчета для OnUnitActiveSec
+-  OnUnitActiveSec=30 - запускаем юнит каждые 30 сек
+-  Unit=watchlog.service - какой юнит запускаем каждые 30 сек
+-  WantedBy=multi-user.target - таймер запускается на уровне multi-user.target
+
+```
+root@debian-lvm:~# cat << EOF > /etc/systemd/system/watchlog.timer
+> [Unit]
+> Description=Run watchlog script every 30 second
+>
+> [Timer]
+> # Run every 30 second
+> OnActiveSec=1
+> OnUnitActiveSec=30
+> Unit=watchlog.service
+>
+> [Install]
+> WantedBy=multi-user.target
 > EOF
 root@debian-lvm:~# 
 ```

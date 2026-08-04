@@ -103,4 +103,25 @@ root@debian-lvm:~#
 
 #### 2. Установим spawn-fcgi и создадим unit-файл (spawn-fcgi.sevice) с помощью переделки init-скрипта (https://gist.github.com/cea2k/1318020).
 
+Устанавливаем необходимые пакеты:
+
+```
+apt install spawn-fcgi php php-cgi php-cli apache2 libapache2-mod-fcgid -y
+```
+Создадим файл конфигурации для spawn-fcgi:
+
+```
+root@debian-lvm:~# mkdir /etc/spawn-fcgi && touch /etc/spawn-fcgi/fcgi.conf
+root@debian-lvm:~# 
+root@debian-lvm:~# cat > /etc/spawn-fcgi/fcgi.conf
+# You must set some working options before the "spawn-fcgi" service will work.
+# If SOCKET points to a file, then this file is cleaned up by the init script.
+#
+# See spawn-fcgi(1) for all possible options.
+#
+# Example :
+SOCKET=/var/run/php-fcgi.sock
+OPTIONS="-u www-data -g www-data -s $SOCKET -S -M 0600 -C 32 -F 1 -- /usr/bin/php-cgi"
+root@debian-lvm:~# 
+```
 

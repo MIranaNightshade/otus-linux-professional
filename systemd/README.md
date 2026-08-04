@@ -97,3 +97,10 @@ root@debian-lvm:~# cat << EOF > /etc/systemd/system/watchlog.timer
 > EOF
 root@debian-lvm:~# 
 ```
+Проверка: 
+
+![word](https://github.com/MIranaNightshade/otus-linux-professional/blob/main/systemd/screen/found_word.png)
+
+#### 2. Установим spawn-fcgi и создадим unit-файл (spawn-fcgi.sevice) с помощью переделки init-скрипта (https://gist.github.com/cea2k/1318020).
+
+

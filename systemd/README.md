@@ -157,4 +157,113 @@ root@debian-lvm:~#
 ```
 Проверим статус сервиса:
 
+![status](https://github.com/MIranaNightshade/otus-linux-professional/blob/main/systemd/screen/status-spawn-fcgi.png)
+
+#### 4. Доработаем unit-файл Nginx (nginx.service) для запуска нескольких инстансов сервера с разными конфигурационными файлами одновременно.
+
+1) Установим nginx
+
+```
+apt install nginx
+```   
+
+2) Создадим новый сервис в /etc/systemd/system на основе nginx.service чтобы управлять несколькими экземплярами сервиса:
+
+After=network.target nss-lookup.target - *запускается после достижения network.target и nss-lookup.target*
+Type=forking - *процесс сам создает копию себя, после чего родительский процесс завершается, а дочерний продолжает работать. systemd считает сервис успешно запущенным после успешного завершения родительского процесса. Нужно обязательно указать путь r Pid файлу чтобы systemd понял какой процесс отслеживать*
+PIDFile=/run/nginx-%I.pid - путь к Pid файлу %I - идентификатор экземпляра сервиса. 
+ExecStartPre=/usr/sbin/nginx -t -c /etc/nginx/nginx-%I.conf -q -g 'daemon on; master_process on;' - *тест конфигурации до запуска*
+- -t - *не запускать только протестировать конфиг*
+- -c */etc/nginx/nginx-%I.conf - путь к конфигурационному файлу*
+ExecStart=/usr/sbin/nginx -c /etc/nginx/nginx-%I.conf -g 'daemon on; master_process on;' - *команда запуска*
+ExecReload=/usr/sbin/nginx -c /etc/nginx/nginx-%I.conf -g 'daemon on; master_process on;' -s reload - *команда перезагрузки без завершения процесса*
+
+```
+# Stop dance for nginx
+# =======================
+#
+# ExecStop sends SIGSTOP (graceful stop) to the nginx process.
+# If, after 5s (--retry QUIT/5) nginx is still running, systemd takes control
+# and sends SIGTERM (fast shutdown) to the main process.
+# After another 5s (TimeoutStopSec=5), and if nginx is alive, systemd sends
+# SIGKILL to all the remaining processes in the process group (KillMode=mixed).
+#
+# nginx signals reference doc:
+# http://nginx.org/en/docs/control.html
+#
+[Unit]
+Description=A high performance web server and a reverse proxy server
+Documentation=man:nginx(8)
+After=network.target nss-lookup.target
+
+[Service]
+Type=forking
+PIDFile=/run/nginx-%I.pid
+ExecStartPre=/usr/sbin/nginx -t -c /etc/nginx/nginx-%I.conf -q -g 'daemon on; master_process on;'
+ExecStart=/usr/sbin/nginx -c /etc/nginx/nginx-%I.conf -g 'daemon on; master_process on;'
+ExecReload=/usr/sbin/nginx -c /etc/nginx/nginx-%I.conf -g 'daemon on; master_process on;' -s reload
+ExecStop=-/sbin/start-stop-daemon --quiet --stop --retry QUIT/5 --pidfile /run/nginx-%I.pid
+TimeoutStopSec=5
+KillMode=mixed
+
+[Install]
+WantedBy=multi-user.target
+```
+**Создадим файлы конфигурации для экземпляров процесса nginx:**
+
+**/etc/nginx/nginx-first.conf**:
+
+```
+user www-data;
+worker_processes auto;
+worker_cpu_affinity auto;
+pid /run/nginx-first.pid;
+error_log /var/log/nginx/error-first.log;
+include /etc/nginx/modules-enabled/*.conf;
+
+events {
+        worker_connections 768;
+        # multi_accept on;
+}
+
+http {
+        server {
+                listen 5001;
+        }
+}
+```
+
+
+**/etc/nginx/nginx-second.conf**:
+
+```
+user www-data;
+worker_processes auto;
+worker_cpu_affinity auto;
+pid /run/nginx-second.pid;
+error_log /var/log/nginx/error-second.log;
+include /etc/nginx/modules-enabled/*.conf;
+
+events {
+        worker_connections 768;
+        # multi_accept on;
+}
+
+http {
+        server {
+                listen 5002;
+        }
+}
+```
+
+_____________________________________________________________________________________________________________________________________________________
+
+
+**ПРОВЕРКА:**
+
+![](https://github.com/MIranaNightshade/otus-linux-professional/blob/main/systemd/screen/nginx1.png)
+
+![](https://github.com/MIranaNightshade/otus-linux-professional/blob/main/systemd/screen/nginx2.png)
+
+![](https://github.com/MIranaNightshade/otus-linux-professional/blob/main/systemd/screen/check_nginx.png)
 

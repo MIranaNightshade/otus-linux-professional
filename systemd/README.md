@@ -131,7 +131,30 @@ OPTIONS="-u www-data -g www-data -s $SOCKET -S -M 0600 -C 32 -F 1 -- /usr/bin/ph
 root@debian-lvm:~# 
 ```
 **Создадим unit-файл для самого spawn-fcgi:**
+After=network.target - *запуск после network.target*
+Type=simple - *systemd считает процесс запущенным после успешного выполнения ExecStart*
+PIDFile=/var/run/spawn-fcgi.pid - *Путь к Process ID файлу*
+EnvironmentFile=/etc/spawn-fcgi/fcgi.conf - *путь к файлу с переменными окружения.*
+ExecStart=/usr/bin/spawn-fcgi -n $OPTIONS - *команда запуска*
+WantedBy=multi-user.target - *сервис будет запускаться при достижении multi-user.target*
 
 ```
+root@debian-lvm:~# cat > /etc/systemd/system/spawn-fcgi.service
+[Unit]
+Description=Spawn-fcgi startup service by Otus
+After=network.target
 
+[Service]
+Type=simple
+PIDFile=/var/run/spawn-fcgi.pid
+EnvironmentFile=/etc/spawn-fcgi/fcgi.conf
+ExecStart=/usr/bin/spawn-fcgi -n $OPTIONS
+KillMode=process
+
+[Install]
+WantedBy=multi-user.target
+root@debian-lvm:~# 
 ```
+Проверим статус сервиса:
+
+

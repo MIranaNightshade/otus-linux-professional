@@ -109,6 +109,12 @@ root@debian-lvm:~#
 apt install spawn-fcgi php php-cgi php-cli apache2 libapache2-mod-fcgid -y
 ```
 Создадим файл конфигурации для spawn-fcgi:
+SOCKET - *сокет через который веб сервер (например nginx) будет обращаться к процессам php-cgi*
+-u www-data -g www-data - *запускаться от пользователя www-data группы www-data*
+-S *создать UNIX сокет от root, если этого не сделать то spawn-fcgi попытается создать сокет в /var/run от пользователя www-data где у него нет прав.*
+-M 0600 - *права на rw у пользователя www-data, остальные без прав*
+-С 32 - *создать 32 процесса php-cgi*
+-F 1 - *создать 1 (fork) управляющий процесс самого spawn-fcgi*
 
 ```
 root@debian-lvm:~# mkdir /etc/spawn-fcgi && touch /etc/spawn-fcgi/fcgi.conf
@@ -124,4 +130,8 @@ SOCKET=/var/run/php-fcgi.sock
 OPTIONS="-u www-data -g www-data -s $SOCKET -S -M 0600 -C 32 -F 1 -- /usr/bin/php-cgi"
 root@debian-lvm:~# 
 ```
+**Создадим unit-файл для самого spawn-fcgi:**
 
+```
+
+```

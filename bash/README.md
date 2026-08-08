@@ -124,4 +124,8 @@ trap cleanup EXIT INT TERM ERR
 
 Результат выполнения скрипта:
 
-![]()
+![](https://github.com/MIranaNightshade/otus-linux-professional/blob/main/bash/screen/script.png)
+
+![](https://github.com/MIranaNightshade/otus-linux-professional/blob/main/bash/screen/script1.png)
+
+

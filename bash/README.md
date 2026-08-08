@@ -28,20 +28,13 @@ cleanup(){
    echo "I cleanup trash, master"
 }
 
-
-# find -inum поиск по номеру inode
-
-
 # Блокируем запуск более одного экземпляра скрипта одновременно
 
 exec 200>/tmp/script-log.lock
 flock 200
 
-
-
 #access_4560_644067-586145-be5697.log
 log_path=/home/mirana/access_4560_644067-586145-be5697.log
-
 
 # Если файл с переменными не существует, то создаем его и записывам переменные: номер строки = 1 (т.к читать будем с начала)
 # $string_start
@@ -53,18 +46,12 @@ fi
 
 source var-script.txt
 
-
 # Проверяем что есть новые строки в файле логов:
 total_lines=$(wc -l < $log_path)
 if  [ $string_start -gt $total_lines ]; then
    echo нет новых строк в логах
    exit 0
 fi
-
-
-
-
-
 
 # Определим последнюю строку в лог файле
 string_last=$(sed -n '$=' $log_path)

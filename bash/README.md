@@ -69,7 +69,7 @@ fi
 # Определим последнюю строку в лог файле
 string_last=$(sed -n '$=' $log_path)
 
-# Найдем начальную и конечную дату/время исследуемой части лога [14/Aug/2019:22:05:00 +0300]
+# Найдем начальную и конечную дату/время исследуемой части лога
 start_date=$(awk -v str=$string_start 'NR==str {print}' $log_path | grep -Po '\[\d{1,2}/\w{3}/.*]')
 last_date=$(awk -v str=$string_last 'NR==str {print}' $log_path | grep -Po '\[\d{1,2}/\w{3}/.*]')
 
@@ -122,7 +122,7 @@ echo -e "string_start=$((string_last+1))" > var-script.txt
 trap cleanup EXIT INT TERM ERR
 ```
 
-Результат выполнения скрипта:
+**Результат выполнения скрипта:**
 
 ![](https://github.com/MIranaNightshade/otus-linux-professional/blob/main/bash/screen/script.png)
 

@@ -71,7 +71,7 @@ sudo cp /boot/grub/grub.cfg ~
 ![](https://github.com/MIranaNightshade/otus-linux-professional/blob/main/grub/screen/finfin.gif)
 
 
-P.S Еще кастомизировать загрузчик используя GRUB_THEME:
+**P.S Еще кастомизировать загрузчик используя GRUB_THEME:**
 
 /etc/default/grub
 

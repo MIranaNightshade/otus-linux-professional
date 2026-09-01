@@ -1,4 +1,4 @@
-<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/9ee8e8d4-5b8e-4d34-88df-f216be0a1ebc" /># SELINUX
+# SELINUX
 ## Задачи:
 **1. Запустить Nginx на нестандартном порту 3-мя разными способами:**
 - переключатели setsebool;

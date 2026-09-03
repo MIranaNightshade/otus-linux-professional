@@ -219,4 +219,9 @@ Sep 03 12:08:27 selinux systemd[1]: Started The nginx HTTP and reverse proxy ser
 ```
 semodule -r nginx
 ```
+### 2. Обеспечить работоспособность приложения при включенном selinux.
+
+
+
+
 

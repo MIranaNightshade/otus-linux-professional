@@ -14,5 +14,8 @@
 
 ### Проверка создания и монтирования дисков на vm:
 
+![](https://github.com/MIranaNightshade/otus-linux-professional/blob/main/vagrant/jpeg/guest.png)
+
 ### Проверка проброса портов на хосте: 
 
+![](https://github.com/MIranaNightshade/otus-linux-professional/blob/main/vagrant/jpeg/host.png)

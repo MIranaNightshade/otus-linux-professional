@@ -220,8 +220,33 @@ Sep 03 12:08:27 selinux systemd[1]: Started The nginx HTTP and reverse proxy ser
 semodule -r nginx
 ```
 ### 2. Обеспечить работоспособность приложения при включенном selinux.
+1) Развернем стенд git clone https://github.com/Nickmob/vagrant_selinux_dns_problems.git
+2) Попробуем с клиента внести изменения в зону: nsupdate -k /etc/named.zonetransfer.key
 
+```
+[vagrant@client ~]$ nsupdate -k /etc/named.zonetransfer.key
+>  server 192.168.50.10
+> zone ddns.lab
+> update add www.ddns.lab. 60 A 192.168.50.15
+> send
+update failed: SERVFAIL
+> quit
+[vagrant@client ~]$
+```
+получили ошибку сервера. 
+Проверим логи на сервере с помощью audit2why:
 
+```
+[root@ns01 ~]# cat /var/log/audit/audit.log | audit2why
+type=AVC msg=audit(1788764762.493:647): avc:  denied  { write } for  pid=779 comm="isc-net-0000" name="dynamic" dev="sda4" ino=540095 scontext=system_u:system_r:named_t:s0 tcontext=unconfined_u:object_r:named_conf_t:s0 tclass=dir permissive=0
 
+        Was caused by:
+                Missing type enforcement (TE) allow rule.
+
+                You can use audit2allow to generate a loadable module to allow this access.
+
+[root@ns01 ~]#
+```
+Получили ошибку: процесс isc-net-0000 с типом named_t попытался что-то записать в директорию (tclass=dir) с типом named_conf_t и selinux отклонил это действие.
 
 

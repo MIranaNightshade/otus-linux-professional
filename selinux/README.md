@@ -249,4 +249,158 @@ type=AVC msg=audit(1788764762.493:647): avc:  denied  { write } for  pid=779 com
 ```
 Получили ошибку: процесс isc-net-0000 с типом named_t попытался что-то записать в директорию (tclass=dir) с типом named_conf_t и selinux отклонил это действие.
 
+С помощью audit2allow создадим модуль, который разрешит процессу named_t писать в директорию  named_conf_t и сразу проверим что модуль появился в списке модулей:
+
+```
+[root@ns01 files]# cat /var/log/audit/audit.log | grep 1788764762.493:647 | audit2allow -M nsupdate_allow_write_named_conf_t
+******************** IMPORTANT ***********************
+To make this policy package active, execute:
+
+semodule -i nsupdate_allow_write_named_conf_t.pp
+
+[root@ns01 files]#
+[root@ns01 files]#
+[root@ns01 files]#
+[root@ns01 files]# semodule -i nsupdate_allow_write_named_conf_t.pp
+[root@ns01 files]#
+[root@ns01 files]#
+[root@ns01 files]#
+[root@ns01 files]# semanage module -l | grep nsupdate_allow_write_named_conf_t
+nsupdate_allow_write_named_conf_t 400       pp
+[root@ns01 files]#
+[root@ns01 files]#
+[root@ns01 files]#
+```
+
+Появилась новая ошибка, теперь требуется разрешить действие { add_name } процессу named_t над файлами директории named_conf_t:
+
+```
+type=AVC msg=audit(1788776435.205:669): avc:  denied  { add_name } for  pid=779 comm="isc-net-0000" name="named.ddns.lab.view1.jnl" scontext=system_u:system_r:named_t:s0 tcontext=unconfined_u:object_r:named_conf_t:s0 tclass=dir permissive=0
+
+        Was caused by:
+                Missing type enforcement (TE) allow rule.
+
+                You can use audit2allow to generate a loadable module to allow this access.
+```
+
+Удалим созданный модуль:
+```
+semodule -r nsupdate_allow_write_named_conf_t
+```
+Переключим setenforce в 0 чтобы собрать в логах все ошибки, что получили:
+
+```
+type=AVC msg=audit(1788779259.817:697): avc:  denied  { write } for  pid=779 comm="isc-net-0000" name="dynamic" dev="sda4" ino=540095 scontext=system_u:system_r:named_t:s0 tcontext=unconfined_u:object_r:named_conf_t:s0 tclass=dir permissive=1
+
+        Was caused by:
+                Missing type enforcement (TE) allow rule.
+
+                You can use audit2allow to generate a loadable module to allow this access.
+
+type=AVC msg=audit(1788779259.817:697): avc:  denied  { add_name } for  pid=779 comm="isc-net-0000" name="named.ddns.lab.view1.jnl" scontext=system_u:system_r:named_t:s0 tcontext=unconfined_u:object_r:named_conf_t:s0 tclass=dir permissive=1
+
+        Was caused by:
+                Missing type enforcement (TE) allow rule.
+
+                You can use audit2allow to generate a loadable module to allow this access.
+
+type=AVC msg=audit(1788779259.817:697): avc:  denied  { create } for  pid=779 comm="isc-net-0000" name="named.ddns.lab.view1.jnl" scontext=system_u:system_r:named_t:s0 tcontext=system_u:object_r:named_conf_t:s0 tclass=file permissive=1
+
+        Was caused by:
+                Missing type enforcement (TE) allow rule.
+
+                You can use audit2allow to generate a loadable module to allow this access.
+
+type=AVC msg=audit(1788779259.817:697): avc:  denied  { write } for  pid=779 comm="isc-net-0000" path="/etc/named/dynamic/named.ddns.lab.view1.jnl" dev="sda4" ino=540200 scontext=system_u:system_r:named_t:s0 tcontext=system_u:object_r:named_conf_t:s0 tclass=file permissive=1
+
+        Was caused by:
+                Missing type enforcement (TE) allow rule.
+
+                You can use audit2allow to generate a loadable module to allow this access.
+```
+
+**Пересоздадим новый модуль с учетом всех ошибок и вернем setenforce в 1**
+*Сначала посмотрим что модуль создастся правильно:*
+```
+[root@ns01 files]# cat /var/log/audit/audit.log | grep 1788779259.817:697 | audit2allow -m nsupdate_add_rights_to_named_conf_t
+
+module nsupdate_add_rights_to_named_conf_t 1.0;
+
+require {
+        type named_conf_t;
+        type named_t;
+        class dir { add_name write };
+        class file { create write };
+}
+
+#============= named_t ==============
+allow named_t named_conf_t:dir { add_name write };
+allow named_t named_conf_t:file { create write };
+[root@ns01 files]#
+[root@ns01 files]#
+[root@ns01 files]# cat /var/log/audit/audit.log | grep 1788779259.817:697 | audit2allow -M nsupdate_add_rights_to_named_conf_t
+******************** IMPORTANT ***********************
+To make this policy package active, execute:
+
+semodule -i nsupdate_add_rights_to_named_conf_t.pp
+
+[root@ns01 files]#
+[root@ns01 files]#
+[root@ns01 files]# semodule -i nsupdate_add_rights_to_named_conf_t.pp
+[root@ns01 files]#
+[root@ns01 files]# setenforce 1
+[root@ns01 files]#
+```
+
+**Попробуем сделать несколько nsupdate c клиента:**
+
+```
+[root@client named]# nsupdate -k /etc/named.zonetransfer.key
+>  server 192.168.50.10
+>  zone ddns.lab
+>  update add www.ddns.lab. 60 A 192.168.50.20
+> send
+> quit
+[root@client named]#
+[root@client named]#
+[root@client named]# nsupdate -k /etc/named.zonetransfer.key
+> server 192.168.50.10
+> zone ddns.lab
+> update add www.ddns.lab. 60 A 192.168.50.15
+> send
+> quit
+[root@client named]#
+[root@client named]#
+[root@client named]# dig @192.168.50.10 www.ddns.lab
+
+; <<>> DiG 9.16.23-RH <<>> @192.168.50.10 www.ddns.lab
+; (1 server found)
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 65376
+;; flags: qr aa rd ra; QUERY: 1, ANSWER: 2, AUTHORITY: 0, ADDITIONAL: 1
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 1232
+; COOKIE: 70c28897896744cb010000006a9ea03dcf0823fd51aabfec (good)
+;; QUESTION SECTION:
+;www.ddns.lab.                  IN      A
+
+;; ANSWER SECTION:
+www.ddns.lab.           60      IN      A       192.168.50.20
+www.ddns.lab.           60      IN      A       192.168.50.15
+
+;; Query time: 2 msec
+;; SERVER: 192.168.50.10#53(192.168.50.10)
+;; WHEN: Mon Sep 07 11:30:06 UTC 2026
+;; MSG SIZE  rcvd: 101
+
+[root@client named]#
+```
+________________________________________________________________________________________________
+
+**Почему именно создание модуля:**
+Можно было поменять контекст безопасности для каталога /etc/named например на named_zone_t, где процесс named_t имеет право на запись, но это может сломать работу процессов которые имеют права на файлы типа named_conf_t, созданный модуль же влияет только на процессы типа named_t (добавляет им права write). 
+
+
 

@@ -320,6 +320,8 @@ type=AVC msg=audit(1788779259.817:697): avc:  denied  { write } for  pid=779 com
 ```
 
 **Пересоздадим новый модуль с учетом всех ошибок и вернем setenforce в 1**
+
+
 *Сначала посмотрим что модуль создастся правильно:*
 ```
 [root@ns01 files]# cat /var/log/audit/audit.log | grep 1788779259.817:697 | audit2allow -m nsupdate_add_rights_to_named_conf_t

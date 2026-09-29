@@ -73,3 +73,42 @@ nginx | SUCCESS => {
     "ping": "pong"
 }
 ```
+
+**Посмотрим какое ядро установлено на хосте:**
+
+```
+mirananight@miranakomp:~/otus/ansible$ ansible nginx -m command -a "uname -r"
+[WARNING]: Host 'nginx' is using the discovered Python interpreter at '/usr/bin/python3.10', but future installation of another Python interpreter could cause a different interpreter to be discovered. See https://docs.ansible.com/ansible-core/2.21/reference_appendices/interpreter_discovery.html for more information.
+nginx | CHANGED | rc=0 >>
+5.15.0-91-generic
+mirananight@miranakomp:~/otus/ansible$ 
+```
+
+**проверим статус службы firewalld:**
+
+```
+mirananight@miranakomp:~/otus/ansible$ ansible nginx -m systemd -a name=firewalld
+[WARNING]: Host 'nginx' is using the discovered Python interpreter at '/usr/bin/python3.10', but future installation of another Python interpreter could cause a different interpreter to be discovered. See https://docs.ansible.com/ansible-core/2.21/reference_appendices/interpreter_discovery.html for more information.
+nginx | SUCCESS => {
+    "ansible_facts": {
+        "discovered_interpreter_python": "/usr/bin/python3.10"
+    },
+    "changed": false,
+    "name": "firewalld",
+    "status": {
+        "ActiveEnterTimestamp": "n/a",
+        "ActiveEnterTimestampMonotonic": "0",
+        "ActiveExitTimestamp": "n/a",
+        "ActiveExitTimestampMonotonic": "0",
+        "ActiveState": "inactive",
+```
+Отредактируем ansible.cfg чтобы убрать предупреждение о python интерпретаторе, зададим жестко путь к интерпретатору: 
+
+```
+[defaults]
+inventory = staging/hosts
+remote_user = vagrant
+host_key_checking = False
+retry_files_enabled = False
+interpreter_python = /usr/bin/python3
+```

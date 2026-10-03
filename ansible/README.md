@@ -112,3 +112,114 @@ host_key_checking = False
 retry_files_enabled = False
 interpreter_python = /usr/bin/python3
 ```
+
+**Создадим шаблон конфигурации nginx используя jinja2 в templates/nginx.conf.j2:**
+
+```
+mirananight@miranakomp:~/otus/ansible/templates$ cat nginx.conf.j2 
+# {{ ansible_managed }}
+events {
+    worker_connections 1024;
+}
+
+http {
+    server {
+        listen       {{ nginx_listen_port }} default_server;
+        server_name  default_server;
+        root         /usr/share/nginx/html;
+
+        location / {
+        }
+    }
+}
+```
+**Напишем playbook, который установит nginx и подставит шаблон templates/nginx.conf.j2 + добавим необходимые tags:**
+
+```
+---
+- name: NGINX | install and configure NGINX
+  hosts: nginx
+  become: true
+  vars:
+    nginx_listen_port: 8080
+
+  tasks:
+    - name: apt update
+      apt:
+        update_cache=yes
+      tags:
+       - update apt
+
+    - name: nginx | install
+      apt:
+        name: nginx
+        state: latest
+      tags:
+        - nginx-package
+
+    - name: NGINX  | Create NGINX config file from template
+      template:
+        src: templates/nginx.conf.j2
+        dest: /etc/nginx/nginx.conf
+      tags:
+        - nginx-configuration       
+```
+
+**Добавим hadler и notify чтобы каждый раз когда конфиг nginx мнеяется сервис перезапускался:**
+
+```
+---
+- name: NGINX | install and configure NGINX
+  hosts: nginx
+  become: true
+  vars:
+    nginx_listen_port: 8080
+
+  tasks:
+    - name: apt update
+      apt:
+        update_cache=yes
+    - tags:
+      - update apt
+
+    - name: nginx | install
+      apt:
+        name: nginx
+        state: latest
+      notify:
+        - restart nginx
+      tags:
+        - nginx-package
+
+
+    - name: NGINX  | Create NGINX config file from template
+      template:
+        src: templates/nginx.conf.j2
+        dest: /etc/nginx/nginx.conf
+      notify:
+        - reload nginx  
+      tags:
+        - nginx-configuration       
+
+  handlers:
+    - name: restart nginx
+      systemd:
+        name: nginx
+        state: restarted
+        enabled: yes
+
+    - name: reload nginx
+      systemd:
+        name: nginx
+        state: reloaded
+```
+**Запустим playbook:**
+
+![result](https://github.com/MIranaNightshade/otus-linux-professional/blob/main/ansible/png/result.png)
+
+
+**Проверим работу nginx на порту 8080:**
+![res1](https://github.com/MIranaNightshade/otus-linux-professional/blob/main/ansible/png/result1.png)
+
+
+

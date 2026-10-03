@@ -179,8 +179,8 @@ http {
     - name: apt update
       apt:
         update_cache=yes
-    - tags:
-      - update apt
+      tags:
+        - update apt
 
     - name: nginx | install
       apt:
@@ -197,9 +197,9 @@ http {
         src: templates/nginx.conf.j2
         dest: /etc/nginx/nginx.conf
       notify:
-        - reload nginx  
+        - reload nginx
       tags:
-        - nginx-configuration       
+        - nginx-configuration
 
   handlers:
     - name: restart nginx

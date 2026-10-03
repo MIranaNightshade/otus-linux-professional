@@ -219,6 +219,8 @@ http {
 
 
 **Проверим работу nginx на порту 8080:**
+
+
 ![res1](https://github.com/MIranaNightshade/otus-linux-professional/blob/main/ansible/png/result1.png)
 
 

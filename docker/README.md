@@ -83,6 +83,18 @@ working. Further configuration is required.</p>
 <p><em>Thank you for using CATginx.</em></p>
 </body>
 ```
+default.conf:
+
+```
+server {
+    listen 80 default_server;
+    listen [::]:80 default_server;
+
+    root /usr/share/nginx/html;
+    index index.html;
+}
+```
+
 Создадим образ:
 
 ```

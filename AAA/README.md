@@ -134,4 +134,3 @@ Welcome to Ubuntu 22.04.5 LTS (GNU/Linux 5.15.0-198-generic x86_64)
 ```
 otus   ALL=(ALL:All) /usr/bin/docker, /usr/bin/systemctl restart docker
 ```
-

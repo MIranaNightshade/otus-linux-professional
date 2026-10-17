@@ -125,3 +125,13 @@ Welcome to Ubuntu 22.04.5 LTS (GNU/Linux 5.15.0-198-generic x86_64)
 
 ```
 
+**⭐️ Предоставим пользователю otus доступ к Docker и право перезапускать Docker-сервис.**
+
+отредактируем /etc/sudoers с помощью команды visudo
+*visudo проверяет sudoers на ошибки перед записью изменений*
+*ALL=(ALL:ALL) "на каких хостах разрешено"=("от имени какого пользователя":"от имени какой группы")*
+
+```
+otus   ALL=(ALL:All) /usr/bin/docker, /usr/bin/systemctl restart docker
+```
+

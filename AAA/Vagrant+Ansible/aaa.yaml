@@ -1,0 +1,71 @@
+---
+- name: Настроить сервер pam и права для пользователей
+  hosts: all
+  become: true
+
+  roles:
+    - geerlingguy.docker
+
+  tasks:
+    - name: создать группу admin
+      ansible.builtin.group:
+        name: admin
+        state: present
+
+    - name: создать пользователя otus
+      ansible.builtin.user:
+        name: otus
+        shell: /bin/bash
+        password: "{{ 'Otus2026!' | password_hash('sha512') }}"
+        state: present
+
+    - name: создать пользователя otusadm и добавить его в группу admin
+      ansible.builtin.user:
+        name: otusadm
+        shell: /bin/bash
+        password: "{{ 'Otus2026!' | password_hash('sha512') }}"
+        groups: admin
+        append: yes
+        state: present
+
+    - name: Добавить пользователя vagrant в группу admin
+      ansible.builtin.user:
+        name: vagrant
+        groups: admin
+        append: yes
+
+    - name: Добавить пользователя root в группу admin
+      ansible.builtin.user:
+        name: root
+        groups: admin
+        append: yes
+
+    - name: создать скрипт /usr/local/bin/login.sh
+      ansible.builtin.copy:
+        src: login.sh
+        dest: /usr/local/bin/login.sh
+        mode: '0755'
+        owner: root
+        group: root
+
+    - name: добавить правило в начало /etc/pam.d/sshd
+      ansible.builtin.lineinfile:
+        path: /etc/pam.d/sshd
+        line: 'auth required pam_exec.so debug /usr/local/bin/login.sh'
+        insertbefore: BOF
+
+    - name: Предоставить пользователю otus доступ к Docker и право перезапускать Docker-сервис.
+      ansible.builtin.lineinfile:
+        path: /etc/sudoers.d/otus
+        line: 'otus   ALL=(ALL:All) /usr/bin/docker, /usr/bin/systemctl restart docker'
+        create: true
+        mode: '0440'
+
+    - name: Разрешить логиниться по паролю
+      ansible.builtin.lineinfile:
+        path: /etc/ssh/sshd_config.d/00-enable-password.conf
+        line: 'PasswordAuthentication yes'
+        create: true
+        mode: '0644'
+        owner: root
+        group: root

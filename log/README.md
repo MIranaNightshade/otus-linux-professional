@@ -304,3 +304,12 @@ analitycs -----> Discover и выбираем наш созданный view:
 
 ![log](https://github.com/MIranaNightshade/otus-linux-professional/blob/main/log/png/logs.png)
 
+
+переместим index.nginx-debian.html и проверим error logs:
+
+```
+mv /var/www/html/index.nginx-debian.html /var/www/
+```
+
+![error](https://github.com/MIranaNightshade/otus-linux-professional/blob/main/log/png/error.png)
+ 

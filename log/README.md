@@ -18,7 +18,7 @@ ________________________________________________________________________________
 
 #### Будем использовать ELK.
 
-1. Разворачиваем две vm с помощью Vagrantfile:
+##### 1. Разворачиваем две vm с помощью Vagrantfile:
 
 ```
 Vagrant.configure("2") do |config|
@@ -44,7 +44,7 @@ Vagrant.configure("2") do |config|
     end
 end
 ```
-2. На vm web настроим nginx и отправку access/error log:
+##### 2. На vm web настроим nginx и отправку access/error log:
 
 ```
 apt update
@@ -159,7 +159,7 @@ root@web:~# systemctl restart rsyslog
 root@web:~#  
 ```
 
-3. Настроим vm log на прием логов от nginx.
+#####**3. Настроим vm log на прием логов от nginx.**
 
 Установим logstash, elasticsearch и kibana:
 Для начала подключим яндекс репозиторий (зеркало) для elk:
@@ -178,5 +178,110 @@ sudo apt install default-jdk
 ```
 sudo apt install logstash elasticsearch kibana
 ```
+
+**Настроим elasticsearch:**
+/etc/elasticsearch/elasticsearch.yml
+
+```
+# ----------------------------------- Paths ------------------------------------
+#
+# Path to directory where to store the data (separate multiple locations by comma):
+#
+path.data: /var/lib/elasticsearch
+#
+# Path to log files:
+#
+path.logs: /var/log/elasticsearch
+
+# Enable encryption for HTTP API client connections, such as Kibana, Logstash, and Agents
+xpack.security.http.ssl:
+  enabled: false
+  keystore.path: certs/http.p12
+
+# Enable encryption and mutual authentication between cluster nodes
+xpack.security.transport.ssl:
+  enabled: false
+  verification_mode: certificate
+  keystore.path: certs/transport.p12
+  truststore.path: certs/transport.p12
+# Create a new cluster with the current node only
+# Additional nodes can still join the cluster later
+cluster.initial_master_nodes: ["log"]
+
+# Allow HTTP API connections from anywhere
+# Connections are encrypted and require user authentication
+http.host: 0.0.0.0
+
+# Allow other nodes to join the cluster from anywhere
+# Connections are encrypted and mutually authenticated
+#transport.host: 0.0.0.0
+
+#----------------------- END SECURITY AUTO CONFIGURATION -------------------------
+
+```
+
+**Настроим logstash:**
+
+в /etc/logstash/logstash.yml
+
+```
+path.data: /var/lib/logstash
+path.config: /etc/logstash/conf.d
+```
+
+в /etc/logstash/conf.d//etc/logstash/conf.d/logstash-nginx.conf
+
+```
+input {
+  tcp {
+    id => "nginx_log"
+    host => "0.0.0.0"
+    port => 5514
+    type => "nginx_syslog"
+  }
+}
+
+output {
+ elasticsearch {
+   hosts => ["http://localhost:9200"]
+   index => "weblogs-%{+YYYY.MM.dd}"
+ }
+ stdout { codec => rubydebug }
+}
+```
+
+**Настроим kibana:**
+/etc/kibana/kibana.yml
+
+```
+
+server.port: 5601
+server.host: "0.0.0.0"
+
+
+# Enables you to specify a file where Kibana stores log output.
+logging:
+  appenders:
+    file:
+      type: file
+      fileName: /var/log/kibana/kibana.log
+      layout:
+        type: json
+  root:
+    appenders:
+      - default
+      - file
+```
+
+Перезагрузим сервисы:
+
+```
+systemclt restart logstash
+systemclt restart elasticsearch
+systemclt restart kibana
+```
+__________________________________________________________________________________________
+
+**Проверка:**
 
 

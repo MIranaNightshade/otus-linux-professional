@@ -286,7 +286,21 @@ ________________________________________________________________________________
 
 на vm web выполним curl http://localhost и зайдем в веб интерфейс kibana http://192.168.56.15:5601/
 
+Management ----> Index Management
+Видим что индекс создался, логи приходят.
+
+![index](https://github.com/MIranaNightshade/otus-linux-professional/blob/main/log/png/kibana-indexpng.png)
+
+Создадим data view: 
+
+management -----> kibana ------> data view
 
 
+![data](https://github.com/MIranaNightshade/otus-linux-professional/blob/main/log/png/data-view.png)
 
+Проверим логи:
+
+analitycs -----> Discover и выбираем наш созданный view:
+
+![log](https://github.com/MIranaNightshade/otus-linux-professional/blob/main/log/png/logs.png)
 

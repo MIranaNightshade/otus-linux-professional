@@ -1,1 +1,182 @@
+# Сбор и анализ логов
+## Цель
+Научится проектировать централизованный сбор логов. Рассмотреть особенности разных платформ для сбора логов.
+### Задачи
+1. В Vagrant разворнуть 2 виртуальные машины web и log
+2. на web настроить nginx
+3. на log настроить центральный лог сервер на любой системе на выбор
+journald;
+rsyslog;
+elk.
+4. настроить аудит, следящий за изменением конфигов nginx 
+
+*Все критичные логи с web должны собираться и локально и удаленно.
+Все логи с nginx должны уходить на удаленный сервер (локально только критичные).
+Логи аудита должны также уходить на удаленную систему.*
+
+_________________________________________________________________________________________________________________________________________________
+
+#### Будем использовать ELK.
+
+1. Разворачиваем две vm с помощью Vagrantfile:
+
+```
+Vagrant.configure("2") do |config|
+    config.vm.box = "bento/ubuntu-22.04"
+    config.vm.provider :virtualbox do |v|
+        v.memory = 1512
+        v.cpus = 2
+    end
+
+    boxes = [
+        { :name => "web",
+          :ip => "192.168.56.10",
+        },
+        { :name => "log",
+          :ip => "192.168.56.15",
+        }
+    ]
+    boxes.each do |opts|
+        config.vm.define opts[:name] do |config|
+            config.vm.hostname = opts[:name]
+            config.vm.network "private_network", ip: opts[:ip]
+        end
+    end
+end
+```
+2. На vm web настроим nginx и отправку access/error log:
+
+```
+apt update
+apt install nginx
+```
+Настроим отправку логов, error логи будут собираться локально и удаленно, access логи только удаленно.
+
+настроим конфиг nginx следующим образом:
+
+*nginx будет отправлять логи на localhost:514 где их будет слушать rsyslog и отправлять на наш сервер с logstash, т.к nginx отправляет логи по udp, а это ненадежно, rsyslog умеет отправлять по tcp*
+
+```
+user www-data;
+worker_processes auto;
+pid /run/nginx.pid;
+include /etc/nginx/modules-enabled/*.conf;
+
+events {
+        worker_connections 768;
+        # multi_accept on;
+}
+
+http {
+
+        ##
+        # Basic Settings
+        ##
+
+        sendfile on;
+        tcp_nopush on;
+        types_hash_max_size 2048;
+        # server_tokens off;
+
+        # server_names_hash_bucket_size 64;
+        # server_name_in_redirect off;
+
+        include /etc/nginx/mime.types;
+        default_type application/octet-stream;
+
+        ##
+        # SSL Settings
+        ##
+
+        ssl_protocols TLSv1 TLSv1.1 TLSv1.2 TLSv1.3; # Dropping SSLv3, ref: POODLE
+        ssl_prefer_server_ciphers on;
+
+        ##
+        # Logging Settings
+        ##
+
+        access_log syslog:server=127.0.0.1:514,tag=nginx_access,severity=info combined;
+        error_log /var/log/nginx/error.log;
+        error_log syslog:server=127.0.0.1:514,tag=nginx_error;
+
+        ##
+        # Gzip Settings
+        ##
+
+        gzip on;
+
+        # gzip_vary on;
+        # gzip_proxied any;
+        # gzip_comp_level 6;
+        # gzip_buffers 16 8k;
+        # gzip_http_version 1.1;
+        # gzip_types text/plain text/css application/json application/javascript text/xml application/xml application/xml+rss text/javascript;
+
+        ##
+        # Virtual Host Configs
+        ##
+
+        include /etc/nginx/conf.d/*.conf;
+        include /etc/nginx/sites-enabled/*;
+}
+
+
+#mail {
+#       # See sample authentication script at:
+#       # http://wiki.nginx.org/ImapAuthenticateWithApachePhpScript
+#
+#       # auth_http localhost/auth.php;
+#       # pop3_capabilities "TOP" "USER";
+#       # imap_capabilities "IMAP4rev1" "UIDPLUS";
+#
+#       server {
+#               listen     localhost:110;
+#               protocol   pop3;
+#               proxy      on;
+#       }
+#
+#       server {
+#               listen     localhost:143;
+#               protocol   imap;
+#               proxy      on;
+#       }
+#}
+
+```
+настраиваем rsyslog:
+
+```
+root@web:~# cat /etc/rsyslog.d/nginx_to_tcp.conf 
+# Прием логов от Nginx на локальный UDP-порт
+module(load="imudp")
+input(type="imudp" port="514" address="127.0.0.1")
+
+# Пересылка на удаленный сервер по TCP (две собачки "@@" означают TCP)
+if $programname == 'nginx_access' then @@192.168.56.15:5514
+if $programname == 'nginx_error' then @@192.168.56.15:5514
+root@web:~#
+root@web:~# systemctl restart rsyslog
+root@web:~#  
+```
+
+3. Настроим vm log на прием логов от nginx.
+
+Установим logstash, elasticsearch и kibana:
+Для начала подключим яндекс репозиторий (зеркало) для elk:
+```
+sudo apt update
+sudo apt install gpg curl
+curl -fsSL https://artifacts.elastic.co/GPG-KEY-elasticsearch | sudo gpg --dearmor -o /usr/share/keyrings/elastic-archive-keyring.gpg
+echo "deb [signed-by=/usr/share/keyrings/elastic-archive-keyring.gpg] https://mirror.yandex.ru/mirrors/elastic/8/ stable main" | sudo tee /etc/apt/sources.list.d/elastic-8.x.list
+```
+**Установим default-jdk необходим для ELK т.к компоненты ELK написаны на java**
+
+```
+sudo apt install default-jdk
+```
+
+```
+sudo apt install logstash elasticsearch kibana
+```
+
 

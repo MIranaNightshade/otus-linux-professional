@@ -312,4 +312,9 @@ mv /var/www/html/index.nginx-debian.html /var/www/
 ```
 
 ![error](https://github.com/MIranaNightshade/otus-linux-professional/blob/main/log/png/error.png)
- 
+
+
+
+##### 4. Настроим аудит чтобы следить за изменением конфига nginx. 
+Будем использовать auditd
+

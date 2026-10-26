@@ -399,4 +399,4 @@ root@log:~#
 ```
 Проверка, поменяем файл /etc/nginx/nginx.conf и проверим логи:
 
-
+![auditlog](https://github.com/MIranaNightshade/otus-linux-professional/blob/main/log/png/audit.png)

@@ -318,3 +318,80 @@ mv /var/www/html/index.nginx-debian.html /var/www/
 ##### 4. Настроим аудит чтобы следить за изменением конфига nginx. 
 Будем использовать auditd
 
+**НА СЕРВЕРЕ WEB:**
+
+Настроим отслеживание изменений в директории /etc/nginx/:
+/etc/audit/rules.d/nginx-watch.rules
+-w - следить за директорией
+-p wa — отслеживать write (запись) и attribute (изменение атрибутов)
+-k nginx_config_changes — ключ (метка) логов
+
+```
+-w /etc/nginx/ -p wa -k nginx_conf_change
+```
+настроим filebeat:
+
+```
+root@web:~# cat /etc/filebeat/filebeat.yml 
+filebeat.inputs:
+  - type: log
+    enabled: true
+    paths:
+      - /var/log/audit/audit.log
+    include_lines: ['nginx_conf_change']
+    fields:
+      source: auditd
+
+output.logstash:
+  hosts: ["192.168.56.15:5044"]
+```
+
+**НА СЕРВЕРЕ LOG:**
+
+Настроим pipelines чтобы логи не смешивались:
+
+```
+root@log:~# cat /etc/logstash/pipelines.yml
+# This file is where you define your pipelines. You can define multiple.
+# For more information on multiple pipelines, see the documentation:
+#   https://www.elastic.co/guide/en/logstash/current/multiple-pipelines.html
+
+- pipeline.id: audit-nginx
+  path.config: "/etc/logstash/conf.d/logstash-audit.conf"
+
+- pipeline.id: nginx-weblogs
+  path.config: "/etc/logstash/conf.d/logstash-nginx.conf"
+```
+Настроим logstash чтобы принимать логи от filebeat:
+
+```
+root@log:~# cat /etc/logstash/conf.d/logstash-audit.conf  
+input {
+  beats {
+    port => 5044
+  }
+}
+
+filter {
+  if "nginx_conf_change" not in [message] {
+    drop {}
+  }
+
+#  mutate {
+#    add_tag => ["audit_nginx"]
+#  }
+}
+
+output {
+ elasticsearch {
+   hosts => ["http://localhost:9200"]
+   #cacert => '/etc/logstash/certs/http_ca.crt'
+   #ssl => true
+   index => "audit-nginx-%{+YYYY.MM.dd}"
+ }
+ stdout { codec => rubydebug }
+}
+cat:  : No such file or directory
+root@log:~# 
+```
+

@@ -395,7 +395,8 @@ output {
  }
  stdout { codec => rubydebug }
 }
-cat:  : No such file or directory
 root@log:~# 
 ```
+Проверка, поменяем файл /etc/nginx/nginx.conf и проверим логи:
+
 

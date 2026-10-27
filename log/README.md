@@ -324,27 +324,28 @@ mv /var/www/html/index.nginx-debian.html /var/www/
 
 **НА СЕРВЕРЕ WEB:**
 
-Настроим отслеживание изменений в директории /etc/nginx/:
-/etc/audit/rules.d/nginx-watch.rules
--w - следить за директорией
--p wa — отслеживать write (запись) и attribute (изменение атрибутов)
--k nginx_config_changes — ключ (метка) логов
+Установим auditbeat и настроим отслеживание изменений всех фалов директории /etc/nginx:
+/etc/auditbeat/auditbeat.yml
 
 ```
--w /etc/nginx/ -p wa -k nginx_conf_change
-```
-настроим filebeat:
+auditbeat.modules:
 
-```
-root@web:~# cat /etc/filebeat/filebeat.yml 
-filebeat.inputs:
-  - type: log
-    enabled: true
-    paths:
-      - /var/log/audit/audit.log
-    include_lines: ['nginx_conf_change']
-    fields:
-      source: auditd
+- module: file_integrity
+  paths:
+    - /etc/nginx
+  recursive: true
+    
+  scan_at_start: true
+  scan_rate_per_sec: 50 MiB
+  max_file_size: 100 MiB
+
+  hash_types: [sha256]
+  include_files: []
+  exclude_files: []
+
+  fields:
+    log_type: nginx_conf_change
+  fields_under_root: true
 
 output.logstash:
   hosts: ["192.168.56.15:5044"]
@@ -366,7 +367,8 @@ root@log:~# cat /etc/logstash/pipelines.yml
 - pipeline.id: nginx-weblogs
   path.config: "/etc/logstash/conf.d/logstash-nginx.conf"
 ```
-Настроим logstash чтобы принимать логи от filebeat:
+
+Настроим logstash чтобы принимать логи от auditbeat:
 
 ```
 root@log:~# cat /etc/logstash/conf.d/logstash-audit.conf  
@@ -376,15 +378,6 @@ input {
   }
 }
 
-filter {
-  if "nginx_conf_change" not in [message] {
-    drop {}
-  }
-
-#  mutate {
-#    add_tag => ["audit_nginx"]
-#  }
-}
 
 output {
  elasticsearch {

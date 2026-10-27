@@ -19,7 +19,7 @@ ________________________________________________________________________________
 #### Будем использовать ELK.
 
 
-![elk](https://github.com/MIranaNightshade/otus-linux-professional/blob/main/log/png/ELK.png)
+![elk](https://github.com/MIranaNightshade/otus-linux-professional/blob/main/log/png/elk1.png)
 
 
 ##### 1. Разворачиваем две vm с помощью Vagrantfile:

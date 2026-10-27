@@ -1,0 +1,7 @@
+# Settings file in YAML
+#
+#
+path.data: /var/lib/logstash
+#
+path.logs: /var/log/logstash
+#

@@ -1,0 +1,75 @@
+---
+- name: Настроить веб сервер  
+  hosts: all
+  become: true
+
+  tasks:
+    
+    - name: Скачать GPG-ключ во временную директорию
+      ansible.builtin.get_url:
+        url: "https://artifacts.elastic.co/GPG-KEY-elasticsearch"
+        dest: /tmp/elastic-key.asc
+        mode: '0644'
+      register: gpg_key_download 
+
+    - name: Конвертировать ключ в бинарный формат (только если ключ изменился или скачан впервые)
+      ansible.builtin.shell: |
+        gpg --dearmor -o /usr/share/keyrings/elastic-archive-keyring.gpg /tmp/elastic-key.asc
+      when: gpg_key_download.changed 
+   
+    - name: Добавить репозиторий ELK.
+      ansible.builtin.lineinfile:
+        path: /etc/apt/sources.list.d/elastic-8.x.list
+        line: 'deb [signed-by=/usr/share/keyrings/elastic-archive-keyring.gpg] https://mirror.yandex.ru/mirrors/elastic/8/ stable main'
+        create: true
+    
+    - name: Обновить кэш apt (apt update).
+      ansible.builtin.apt:
+        update_cache: true
+
+    - name: Установка пакетов
+      ansible.builtin.package:
+        name: "{{ item }}"
+        state: present
+      loop:
+       - nginx
+       - auditbeat
+       - filebeat
+
+    - name: заменить nginx.conf
+      ansible.builtin.copy:
+        src: nginx.conf
+        dest: /etc/nginx/nginx.conf
+        mode: '0644'
+        owner: root
+        group: root   
+       
+    - name: настроить auditbeat
+      ansible.builtin.copy:
+        src: auditbeat.yml
+        dest: /etc/auditbeat/auditbeat.yml
+        owner: root
+        group: root
+        mode: '0644'
+       
+    
+    - name: настроить rsyslog
+      ansible.builtin.copy:
+        dest: /etc/rsyslog.d/nginx_to_tcp.conf
+        content: |
+          module(load="imudp")
+          input(type="imudp" port="514" address="127.0.0.1")
+          if $programname == 'nginx_access' then @@192.168.56.15:5514
+          if $programname == 'nginx_error' then @@192.168.56.15:5514
+        mode: '0644'
+
+
+    - name: Перезагрузить сервисы
+      ansible.builtin.systemd_service:
+        name: "{{ item }}"
+        state: restarted
+        enabled: true
+      loop:
+       - nginx
+       - auditbeat
+       - rsyslog

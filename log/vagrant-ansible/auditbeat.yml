@@ -1,0 +1,21 @@
+auditbeat.modules:
+
+- module: file_integrity
+  paths:
+    - /etc/nginx
+  recursive: true
+    
+  scan_at_start: true
+  scan_rate_per_sec: 50 MiB
+  max_file_size: 100 MiB
+
+  hash_types: [sha256]
+  include_files: []
+  exclude_files: []
+
+  fields:
+    log_type: nginx_conf_change
+  fields_under_root: true
+
+output.logstash:
+  hosts: ["192.168.56.15:5044"]

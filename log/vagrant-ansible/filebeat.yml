@@ -1,0 +1,11 @@
+filebeat.inputs:
+  - type: log
+    enabled: true
+    paths:
+      - /var/log/audit/audit.log
+    include_lines: ['nginx_conf_change']
+    fields:
+      source: auditd
+
+output.logstash:
+  hosts: ["192.168.56.15:5044"]

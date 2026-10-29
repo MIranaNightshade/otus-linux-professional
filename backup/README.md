@@ -44,3 +44,9 @@ echo 'command="/usr/local/bin/borg serve" ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQ
 chown -R borg:borg ~borg/.ssh
 ```
 
+На сервере backup создадим симлинк:
+
+```
+ln -s /usr/bin/borg /usr/local/bin/borg
+```
+

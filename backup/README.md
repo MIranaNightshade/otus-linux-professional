@@ -55,13 +55,13 @@ ln -s /usr/bin/borg /usr/local/bin/borg
 Инициализируем репозиторий borg на backup сервере с client сервера:
 
 ```
-borg init --encryption=repokey borg@192.168.11.160:/var/backup/
+borg init --encryption=repokey borg@192.168.56.160:/var/backup/
 ```
 
 Запускаем проверку создания бэкапа: 
 
 ```
-borg create --stats --list borg@192.168.11.160:/var/backup/::"etc-{now:%Y-%m-%d_%H:%M:%S}" /etc
+borg create --stats --list borg@192.168.56.160:/var/backup/::"etc-{now:%Y-%m-%d_%H:%M:%S}" /etc
 ```
 
 Проверим результат:

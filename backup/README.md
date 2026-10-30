@@ -136,6 +136,10 @@ root@client:~#
 
 **Автоматизируем создание бэкапов с помощью systemd (service+timer)**
 
+*Какие бекапы храним:*
+*--keep-within 3m* Все бекапы за последние 3 месяца
+*--keep-monthly 12* По одному бекапу за последние 12 месяцев (кроме первых трех месяцев правило для которых в первом правиле)
+
 
 ```
 root@client:~# systemctl cat borg-backup.service
@@ -163,9 +167,8 @@ ExecStart=/bin/borg check ${REPO}
 
 # Очистка старых бэкапов
 ExecStart=/bin/borg prune \
-    --keep-daily  90      \
-    --keep-monthly 12     \
-    --keep-yearly  1       \
+    --keep-within 3m \
+    --keep-monthly 12 \
     ${REPO}
 ```
 

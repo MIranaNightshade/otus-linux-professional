@@ -50,3 +50,88 @@ chown -R borg:borg ~borg/.ssh
 ln -s /usr/bin/borg /usr/local/bin/borg
 ```
 
+**C client server:**
+
+Инициализируем репозиторий borg на backup сервере с client сервера:
+
+```
+borg init --encryption=repokey borg@192.168.11.160:/var/backup/
+```
+
+Запускаем проверку создания бэкапа: 
+
+```
+borg create --stats --list borg@192.168.11.160:/var/backup/::"etc-{now:%Y-%m-%d_%H:%M:%S}" /etc
+```
+
+Проверим результат:
+
+```
+root@client:~# borg list borg@192.168.56.160:/var/backup/
+Enter passphrase for key ssh://borg@192.168.56.160/var/backup: 
+etc-2026-10-30_05:02:47              Fri, 2026-10-30 05:03:07 [08c4e4da853676bc92235484a05f6e51f79c8a2a3980ac53fea48ea0caf05918]
+root@client:~# 
+```
+
+Проверим список файлов:
+
+```
+root@client:~# borg list borg@192.168.56.160:/var/backup/::etc-2026-10-30_05:02:47
+Enter passphrase for key ssh://borg@192.168.56.160/var/backup: 
+drwxr-xr-x root   root          0 Fri, 2026-10-30 04:47:46 etc
+lrwxrwxrwx root   root         19 Wed, 2024-09-11 14:22:06 etc/mtab -> ../proc/self/mounts
+lrwxrwxrwx root   root         21 Tue, 2024-09-10 11:18:05 etc/os-release -> ../usr/lib/os-release
+lrwxrwxrwx root   root         39 Wed, 2024-09-11 14:22:05 etc/resolv.conf -> ../run/systemd/resolve/stub-resolv.conf
+lrwxrwxrwx root   root         13 Tue, 2023-12-05 05:15:51 etc/rmt -> /usr/sbin/rmt
+lrwxrwxrwx root   root         23 Wed, 2024-09-11 14:22:40 etc/vtrgb -> /etc/alternatives/vtrgb
+drwxr-xr-x root   root          0 Wed, 2024-09-11 14:24:23 etc/ModemManager
+drwxr-xr-x root   root          0 Wed, 2023-12-20 05:35:16 etc/ModemManager/connection.d
+drwxr-xr-x root   root          0 Wed, 2023-12-20 05:35:16 etc/ModemManager/fcc-unlock.d
+drwxr-xr-x root   root          0 Thu, 2025-10-23 22:27:15 etc/PackageKit
+-rw-r--r-- root   root        706 Thu, 2022-02-17 13:13:28 etc/PackageKit/PackageKit.conf
+-rw-r--r-- root   root       1718 Mon, 2022-03-14 19:11:19 etc/PackageKit/Vendor.conf
+drwxr-xr-x root   root          0 Wed, 2024-09-11 14:22:12 etc/X11
+drwxr-xr-x root   root          0 Thu, 2025-10-23 22:31:03 etc/X11/Xsession.d
+-rw-r--r-- root   root       1062 Mon, 2021-06-28 12:15:25 etc/X11/Xsession.d/20dbus_xdg-runtime
+-rw-r--r-- root   root        880 Sat, 2021-12-18 21:45:15 etc/X11/Xsession.d/90gpg-agent
+-rw-r--r-- root   root       2127 Thu, 2025-10-23 22:31:03 etc/X11/Xsession.d/98vboxadd-xclient
+drwxr-xr-x root   root          0 Wed, 2021-08-18 09:26:23 etc/X11/xkb
+drwxr-xr-x root   root          0 Thu, 2025-10-23 22:32:52 etc/alternatives
+lrwxrwxrwx root   root         23 Wed, 2024-09-11 14:24:12 etc/alternatives/arptables -> /usr/sbin/arptables-nft
+lrwxrwxrwx root   root         31 Wed, 2024-09-11 14:24:12 etc/alternatives/arptables-restore -> /usr/sbin/arptables-nft-restore
+lrwxrwxrwx root   root         28 Wed, 2024-09-11 14:24:12 etc/alternatives/arptables-save -> /usr/sbin/arptables-nft-save
+lrwxrwxrwx root   root         13 Wed, 2024-09-11 14:22:17 etc/alternatives/awk -> /usr/bin/gawk
+lrwxrwxrwx root   root         29 Wed, 2024-09-11 14:22:56 etc/alternatives/awk.1.gz -> /usr/share/man/man1/gawk.1.gz
+lrwxrwxrwx root   root         38 Wed, 2024-09-11 14:22:57 etc/alternatives/builtins.7.gz -> /usr/share/man/man7/bash-builtins.7.gz
+lrwxrwxrwx root   root         22 Wed, 2024-09-11 14:24:12 etc/alternatives/ebtables -> /usr/sbin/ebtables-nft
+lrwxrwxrwx root   root         30 Wed, 2024-09-11 14:24:12 etc/alternatives/ebtables-restore -> /usr/sbin/ebtables-nft-restore
+lrwxrwxrwx root   root         27 Wed, 2024-09-11 14:24:12 etc/alternatives/ebtables-save -> /usr/sbin/ebtables-nft-save
+lrwxrwxrwx root   root          9 Wed, 2024-09-11 14:24:10 etc/alternatives/editor -> /bin/nano
+lrwxrwxrwx root   root         29 Wed, 2024-09-11 14:24:10 etc/alternatives/editor.1.gz -> /usr/share/man/man1/nano.1.gz
+lrwxrwxrwx root   root         18 Wed, 2024-09-11 14:24:27 etc/alternatives/ex -> /usr/bin/vim.basic
+lrwxrwxrwx root   root         28 Wed, 2024-09-11 14:24:27 etc/alternatives/ex.1.gz -> /usr/share/man/man1/vim.1.gz
+lrwxrwxrwx root   root         31 Wed, 2024-09-11 14:24:27 etc/alternatives/ex.da.1.gz -> /usr/share/man/da/man1/vim.1.gz
+lrwxrwxrwx root   root         31 Wed, 2024-09-11 14:24:27 etc/alternatives/ex.de.1.gz -> /usr/share/man/de/man1/vim.1.gz
+lrwxrwxrwx root   root         31 Wed, 2024-09-11 14:24:27 etc/alternatives/ex.fr.1.gz -> /usr/share/man/fr/man1/vim.1.gz
+lrwxrwxrwx root   root         31 Wed, 2024-09-11 14:24:27 etc/alternatives/ex.it.1.gz -> /usr/share/man/it/man1/vim.1.gz
+lrwxrwxrwx root   root         31 Wed, 2024-09-11 14:24:27 etc/alternatives/ex.ja.1.gz -> /usr/share/man/ja/man1/vim.1.gz
+lrwxrwxrwx root   root         31 Wed, 2024-09-11 14:24:27 etc/alternatives/ex.pl.1.gz -> /usr/share/man/pl/man1/vim.1.gz
+lrwxrwxrwx root   root         31 Wed, 2024-09-11 14:24:27 etc/alternatives/ex.ru.1.gz -> /usr/share/man/ru/man1/vim.1.gz
+lrwxrwxrwx root   root         14 Wed, 2024-09-11 14:24:10 etc/alternatives/ftp -> /usr/bin/tnftp
+lrwxrwxrwx root   root         30 Wed, 2024-09-11 14:24:10 etc/alternatives/ftp.1.gz -> /usr/share/man/man1/tnftp.1.gz
+...
+```
+Достанем файл из бекапа:
+
+```
+root@client:~# borg extract borg@192.168.56.160:/var/backup/::etc-2026-10-30_05:02:47 etc/hostname
+Enter passphrase for key ssh://borg@192.168.56.160/var/backup: 
+root@client:~# 
+root@client:~# 
+root@client:~# 
+root@client:~# cat etc/hostname 
+client
+root@client:~# 
+```
+
+

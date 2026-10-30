@@ -134,4 +134,76 @@ client
 root@client:~# 
 ```
 
+**Автоматизируем создание бэкапов с помощью systemd (service+timer)**
 
+
+```
+root@client:~# systemctl cat borg-backup.service
+# /etc/systemd/system/borg-backup.service
+[Unit]
+Description=Borg Backup
+
+[Service]
+Type=oneshot
+
+# Парольная фраза
+Environment="BORG_PASSPHRASE=Otus1234"
+# Репозиторий
+Environment=REPO=borg@192.168.56.160:/var/backup/
+# Что бэкапим
+Environment=BACKUP_TARGET=/etc
+
+# Создание бэкапа
+ExecStart=/bin/borg create \
+    --stats                \
+    ${REPO}::etc-{now:%%Y-%%m-%%d_%%H:%%M:%%S} ${BACKUP_TARGET}
+
+# Проверка бэкапа
+ExecStart=/bin/borg check ${REPO}
+
+# Очистка старых бэкапов
+ExecStart=/bin/borg prune \
+    --keep-daily  90      \
+    --keep-monthly 12     \
+    --keep-yearly  1       \
+    ${REPO}
+```
+
+```
+root@client:~# systemctl cat borg-backup.timer
+# /etc/systemd/system/borg-backup.timer
+[Unit]
+Description=Borg Backup
+
+[Timer]
+OnBootSec=15sec
+OnUnitActiveSec=5min
+
+[Install]
+WantedBy=timers.target
+```
+
+Проверим логи:
+
+```
+root@client:~# journalctl -u borg-backup -f
+Oct 30 06:25:40 client systemd[1]: Starting Borg Backup...
+Oct 30 06:25:41 client borg[1828]: ------------------------------------------------------------------------------
+Oct 30 06:25:41 client borg[1828]: Repository: ssh://borg@192.168.56.160/var/backup
+Oct 30 06:25:41 client borg[1828]: Archive name: etc-2026-10-30_06:25:40
+Oct 30 06:25:41 client borg[1828]: Archive fingerprint: b49bf9ccef056e6d2dba125138ed7946bcd4666f995f24be9285501a85a29964
+Oct 30 06:25:41 client borg[1828]: Time (start): Fri, 2026-10-30 06:25:41
+Oct 30 06:25:41 client borg[1828]: Time (end):   Fri, 2026-10-30 06:25:41
+Oct 30 06:25:41 client borg[1828]: Duration: 0.12 seconds
+Oct 30 06:25:41 client borg[1828]: Number of files: 805
+Oct 30 06:25:41 client borg[1828]: Utilization of max. archive size: 0%
+Oct 30 06:25:41 client borg[1828]: ------------------------------------------------------------------------------
+Oct 30 06:25:41 client borg[1828]:                        Original size      Compressed size    Deduplicated size
+Oct 30 06:25:41 client borg[1828]: This archive:                2.29 MB              1.03 MB              1.25 kB
+Oct 30 06:25:41 client borg[1828]: All archives:                4.57 MB              2.06 MB              1.15 MB
+Oct 30 06:25:41 client borg[1828]:                        Unique chunks         Total chunks
+Oct 30 06:25:41 client borg[1828]: Chunk index:                     758                 1584
+Oct 30 06:25:41 client borg[1828]: ------------------------------------------------------------------------------
+Oct 30 06:25:42 client systemd[1]: borg-backup.service: Deactivated successfully.
+Oct 30 06:25:42 client systemd[1]: Finished Borg Backup.
+```

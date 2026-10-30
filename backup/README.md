@@ -18,7 +18,7 @@
 На сервере и клиенте устанавливаем borg:
 
 ```
-apt install borg-backup
+apt install borgbackup
 ```
 
 На сервере backup:

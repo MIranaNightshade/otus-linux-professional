@@ -1,0 +1,11 @@
+root@client:~# systemctl cat borg-backup.timer
+# /etc/systemd/system/borg-backup.timer
+[Unit]
+Description=Borg Backup
+
+[Timer]
+OnBootSec=15sec
+OnUnitActiveSec=5min
+
+[Install]
+WantedBy=timers.target

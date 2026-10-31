@@ -1,0 +1,210 @@
+---
+- name: настройка borg сервера и клиента
+  hosts: all
+  become: true
+  vars:
+    ssh_key_path: /home/vagrant/.ssh/id_ed25519
+  
+  tasks:
+
+    - name: Обновить кэш apt (apt update).
+      ansible.builtin.apt:
+        update_cache: true
+    
+
+    - name: Установить borg
+      ansible.builtin.package:
+        name: borgbackup
+        state: present
+
+    - name: создать пользователя borg на сервере бекапов.
+      ansible.builtin.user:
+        name: borg
+        shell: /bin/bash
+        state: present
+      when: inventory_hostname == "backup"  # Создать inventory.ini
+
+    - name: Создать файловую систему ext4 на /dev/sdb
+      community.general.filesystem:
+        fstype: ext4
+        dev: /dev/sdb
+      when: inventory_hostname == "backup"    
+
+    - name: Настроить и смонтировать устройство
+      ansible.posix.mount:
+        path: /var/backup
+        src: /dev/sdb
+        fstype: ext4
+        opts: "defaults"
+        state: mounted
+      when: inventory_hostname == "backup"  # Создать inventory.ini
+
+    - name: Создать директорию для точки монтирования
+      ansible.builtin.file:
+        path: /var/backup
+        state: directory
+        owner: borg
+        group: borg
+        mode: '0755'
+      when: inventory_hostname == "backup"
+
+    - name: Сгенерировать пару ключей на client
+      community.crypto.openssh_keypair:
+        path: /home/vagrant/.ssh/id_ed25519
+        type: ed25519
+        owner: "vagrant"
+        group: "vagrant"
+        mode: "0600"
+      when: inventory_hostname == "client"
+      register: keypair
+
+    - name: Прочитать публичный ключ c client
+      ansible.builtin.slurp:
+        src: /home/vagrant/.ssh/id_ed25519.pub
+      when: inventory_hostname == "client"
+      register: client_public_key
+
+    - name: Сохранить публичный ключ client на control node
+      ansible.builtin.copy:
+        content: "{{ hostvars['client']['client_public_key']['content'] | b64decode }}"
+        dest: /tmp/client_id_ed25519.pub
+        mode: '0600'
+      when: inventory_hostname == "client"
+      delegate_to: localhost
+      become: false
+
+
+#-----------------------------------
+    - name: Скопировать приватный ключ vagrant в /root/.ssh на том же client
+      copy:
+        src: /home/vagrant/.ssh/id_ed25519
+        dest: /root/.ssh/id_ed25519
+        remote_src: true
+        owner: root
+        group: root
+        mode: "0600"
+      become: true
+      when: inventory_hostname == "client"
+  
+
+    - name: Добавить client public key на backup сервер
+      ansible.posix.authorized_key:
+        user: borg
+        state: present
+        key: "{{ lookup('file', '/tmp/client_id_ed25519.pub') }}"
+      when: inventory_hostname == "backup"
+
+    - name: ключ
+      ansible.builtin.copy:
+        src: /tmp/client_id_ed25519.pub
+        dest: /home/borg/.ssh/client_id_ed25519.pub
+        mode: '0644'
+        owner: borg
+        group: borg
+      when: inventory_hostname == "backup"
+
+
+    - name: Создать симлинк для borg на backup
+      ansible.builtin.file:
+        src: /usr/bin/borg
+        dest: /usr/local/bin/borg
+        state: link
+        force: true
+      become: true
+      when: inventory_hostname == "backup"
+    
+
+
+    - name: Очистить каталог для Borg репозитория
+      ansible.builtin.file:
+        path: /var/backup/lost+found
+        state: absent
+      when: inventory_hostname == "backup"
+
+ 
+
+
+    - name: создать service
+      ansible.builtin.copy:
+        src: borg-backup.service
+        dest: /etc/systemd/system/borg-backup.service
+        mode: '0755'
+        owner: root
+        group: root
+      when: inventory_hostname == "client"
+
+    - name: создать timer
+      ansible.builtin.copy:
+        src: borg-backup.timer
+        dest: /etc/systemd/system/borg-backup.timer
+        mode: '0755'
+        owner: root
+        group: root
+      when: inventory_hostname == "client"
+
+    - name: запустить timer
+      ansible.builtin.systemd_service:
+        name: borg-backup.timer
+        state: started
+        enabled: true
+      when: inventory_hostname == "client"
+
+
+
+
+    - name: Получить SSH host key сервера backup
+      ansible.builtin.command:
+        cmd: "ssh-keyscan -T 10 -t ed25519,ecdsa,rsa 192.168.56.160"
+      register: backup_host_key
+      changed_when: false
+      failed_when: backup_host_key.stdout | length == 0
+      when: inventory_hostname == "client"
+     
+    - name: Добавить fingerprint backup в known_hosts на client
+      ansible.builtin.known_hosts:
+        name: 192.168.56.160
+        key: "{{ backup_host_key.stdout }}"
+        path: /etc/ssh/ssh_known_hosts
+        state: present  
+      when: inventory_hostname == "client"
+
+
+
+    - name: Установить borgmatic на client сервере
+      ansible.builtin.package:
+        name: borgmatic
+        state: present
+      when: inventory_hostname == "client"
+    
+    
+    - name: Создать папку для конфига
+      ansible.builtin.file:
+        path: /etc/borgmatic
+        state: directory
+        mode: '0755'
+        owner: root
+        group: root
+      when: inventory_hostname == "client"
+
+
+    - name: создать конфиг borgmatic
+      ansible.builtin.copy:
+        src: borgmatic.config
+        dest: /etc/borgmatic/config.yaml
+        mode: '0644'
+        owner: root
+        group: root
+      when: inventory_hostname == "client" 
+     
+
+    - name: Инициализация репозитория Borg через borgmatic
+      ansible.builtin.command:
+        cmd: borgmatic init --encryption repokey-blake2
+      register: borg_init_result
+
+      failed_when: 
+        - borg_init_result.rc != 0 
+        - "'already exists' not in borg_init_result.stderr"
+      changed_when: "'already exists' not in borg_init_result.stderr"
+      become: false
+      when: inventory_hostname == "client"

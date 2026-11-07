@@ -22,7 +22,7 @@
 ![scheme](https://github.com/MIranaNightshade/otus-linux-professional/blob/main/network/png/scheme.png)
 
 
-Сводная таблица занытых/свободных подсетей:
+Сводная таблица занятых/свободных подсетей:
 
 | name               | network       |  mask         | host min           | host max     | N | broadcast    |
 |----   | -------  | ------ | -------  | -------- | -- | --------|

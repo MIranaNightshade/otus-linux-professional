@@ -16,10 +16,14 @@
 ![shema](https://github.com/MIranaNightshade/otus-linux-professional/blob/main/iptables/png/shema.png)
 
 
+#### Настройка проброса порта:
+
 ```
 iptables -t nat -A PREROUTING -i eth1 -p tcp --dport 8080 -j DNAT --to-destination 192.168.0.2:80
 iptables -t nat -A POSTROUTING -o eth1 -p tcp -d 192.168.0.2 --dport 80 -j MASQUERADE
 ```
+#### Настройка knock port:
+***Подключение по ssh разрешено только тем кто в течении 10 сек до этого постучался на порт 6222***
 
 ```
 iptables -A INPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT

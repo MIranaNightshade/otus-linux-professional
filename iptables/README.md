@@ -10,3 +10,7 @@
 4. запустить nginx на centralServer.
 5. пробросить 80й порт на inetRouter2 8080.
 6. дефолт в инет оставить через inetRouter.
+
+#### Схема сети:
+
+![shema](https://github.com/MIranaNightshade/otus-linux-professional/blob/main/iptables/png/scheme.png)

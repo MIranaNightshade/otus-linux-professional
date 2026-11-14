@@ -13,7 +13,7 @@
 
 #### Схема сети:
 
-![shema](https://github.com/MIranaNightshade/otus-linux-professional/blob/main/iptables/png/scheme.png)
+![shema](https://github.com/MIranaNightshade/otus-linux-professional/blob/main/iptables/png/shema.png)
 
 
 ```

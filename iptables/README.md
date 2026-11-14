@@ -14,3 +14,8 @@
 #### Схема сети:
 
 ![shema](https://github.com/MIranaNightshade/otus-linux-professional/blob/main/iptables/png/scheme.png)
+
+
+```
+iptables -t nat -A PREROUTING -i eth1 -p tcp --dport 8080 -j DNAT --to-destination 192.168.0.2:80
+```

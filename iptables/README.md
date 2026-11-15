@@ -34,3 +34,12 @@ iptables -A INPUT -p tcp -m multiport --dports 22,2222 \
   -m recent --name KNOCK --rcheck --seconds 10 -j ACCEPT
 iptables -A INPUT -p tcp -m multiport --dports 22,2222 -j DROP
 ```
+
+```
+iptables -A INPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+iptables -A INPUT -i lo -j ACCEPT
+iptables -A INPUT -p tcp --dport 6222 -m recent --name KNOCK --set -j DROP
+iptables -A INPUT -p tcp --dport 22 -m conntrack --ctstate NEW \
+  -m recent --name KNOCK --rcheck --seconds 10 -j ACCEPT
+iptables -A INPUT -p tcp --dport 22 -j DROP
+```

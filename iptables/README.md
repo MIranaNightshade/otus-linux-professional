@@ -32,5 +32,5 @@ iptables -A INPUT -p tcp --dport 6222 -m recent --name KNOCK --set -j DROP
 iptables -A INPUT -p tcp -m multiport --dports 22,2222 \
   -m conntrack --ctstate NEW \
   -m recent --name KNOCK --rcheck --seconds 10 -j ACCEPT
-iptables -A INPUT -p tcp --dport 22 -j DROP
+iptables -A INPUT -p tcp -m multiport --dports 22,2222 -j DROP
 ```

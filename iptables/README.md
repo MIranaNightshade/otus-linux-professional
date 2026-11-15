@@ -5,7 +5,7 @@
 ### Задачи:
 
 1. реализовать knocking port
-2. centralRouter может попасть на ssh inetrRouter через knock скрипт
+2. centralRouter может попасть на ssh inetRouter через knock скрипт
 3. добавить inetRouter2, который виден(маршрутизируется (host-only тип сети для виртуалки)) с хоста или форвардится порт через локалхост.
 4. запустить nginx на centralServer.
 5. пробросить 80й порт на inetRouter2 8080.

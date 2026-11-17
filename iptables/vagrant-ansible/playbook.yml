@@ -1,0 +1,82 @@
+---
+- name: настройка сети
+  hosts: all
+  become: true
+
+  tasks:
+   
+
+    - name: Заменить строку в resolved.conf
+      ansible.builtin.lineinfile:
+        path: /etc/systemd/resolved.conf
+        regexp: '^#?DNSSEC='
+        line: 'DNSSEC=no'
+        state: present
+
+    - name: Перезагрузить systemd-resolved
+      ansible.builtin.systemd_service:
+        name: systemd-resolved
+        state: restarted
+  
+
+    - name: apt update
+      ansible.builtin.apt:
+        update_cache: true
+      when: (ansible_hostname == "centralServer")
+
+    - name: Установить nginx
+      ansible.builtin.apt:
+        name: nginx
+        state: present
+      when: (ansible_hostname == "centralServer")
+
+
+
+    - name: set up forward packages across routers
+      sysctl:
+        name: net.ipv4.conf.all.forwarding
+        value: '1'
+        state: present
+      when: "'routers' in group_names"
+    
+    - name: отключить default gw полученный по dhcp на всех хостах кроме inetRouter
+      template: 
+        src: 00-installer-config.yaml
+        dest: /etc/netplan/00-installer-config.yaml
+        owner: root
+        group: root
+        mode: 0644
+      when: (ansible_hostname != "inetRouter")
+
+    - name: прописать маршруты на хостах.
+      template: 
+        src: "50-vagrant_{{ansible_hostname}}.yaml"
+        dest: /etc/netplan/50-vagrant.yaml
+        owner: root
+        group: root
+        mode: 0644
+      notify: Apply netplan
+    
+    - name: Настроить Nat и knock на inetRouter. И настроить port forward на inetRouter2.
+      template: 
+        src: "{{ item.src }}"
+        dest: "{{ item.dest }}"
+        owner: root
+        group: root
+        mode: "{{ item.mode }}"
+      with_items:
+        - { src: "iptables_rules-{{ansible_hostname}}.ipv4", dest: "/etc/iptables_rules.ipv4", mode: "0644" }
+        - { src: "iptables_restore", dest: "/etc/network/if-pre-up.d/iptables", mode: "0755" }
+      when: (ansible_hostname == "inetRouter" or ansible_hostname == "inetRouter2")
+      changed_when: true
+      notify: Применить изменения iptables
+
+
+  handlers:
+    - name: Применить изменения iptables
+      ansible.builtin.command:
+        cmd: iptables-restore /etc/iptables_rules.ipv4
+
+    - name: Apply netplan
+      ansible.builtin.command:
+        cmd: netplan apply

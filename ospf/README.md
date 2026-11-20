@@ -61,3 +61,32 @@ listening on any, link-type LINUX_SLL2 (Linux cooked v2), snapshot length 262144
 0 packets dropped by kernel
 vagrant@router1:~$ 
 ```
+#### Cиметричный роутинг:
+
+**Выставим cost на линке между r1 и r3 в 1000 чтобы трафик от узла и обратно ходил по одному пути**
+
+
+Проверим результат:
+
+```
+vagrant@router1:~$ sudo tcpdump -i any -p icmp
+tcpdump: data link type LINUX_SLL2
+tcpdump: verbose output suppressed, use -v[v]... for full protocol decode
+listening on any, link-type LINUX_SLL2 (Linux cooked v2), snapshot length 262144 bytes
+10:27:23.293779 eth1  Out IP router1 > 192.168.30.1: ICMP echo request, id 1, seq 1, length 64
+10:27:23.295739 eth1  In  IP 192.168.30.1 > router1: ICMP echo reply, id 1, seq 1, length 64
+10:27:24.341002 eth1  Out IP router1 > 192.168.30.1: ICMP echo request, id 1, seq 2, length 64
+10:27:24.343007 eth1  In  IP 192.168.30.1 > router1: ICMP echo reply, id 1, seq 2, length 64
+10:27:25.370813 eth1  Out IP router1 > 192.168.30.1: ICMP echo request, id 1, seq 3, length 64
+10:27:25.372991 eth1  In  IP 192.168.30.1 > router1: ICMP echo reply, id 1, seq 3, length 64
+10:27:26.389344 eth1  Out IP router1 > 192.168.30.1: ICMP echo request, id 1, seq 4, length 64
+10:27:26.391495 eth1  In  IP 192.168.30.1 > router1: ICMP echo reply, id 1, seq 4, length 64
+10:27:27.424437 eth1  Out IP router1 > 192.168.30.1: ICMP echo request, id 1, seq 5, length 64
+10:27:27.425285 eth1  In  IP 192.168.30.1 > router1: ICMP echo reply, id 1, seq 5, length 64
+10:27:28.468348 eth1  Out IP router1 > 192.168.30.1: ICMP echo request, id 1, seq 6, length 64
+10:27:28.470465 eth1  In  IP 192.168.30.1 > router1: ICMP echo reply, id 1, seq 6, length 64
+10:27:29.519256 eth1  Out IP router1 > 192.168.30.1: ICMP echo request, id 1, seq 7, length 64
+10:27:29.521251 eth1  In  IP 192.168.30.1 > router1: ICMP echo reply, id 1, seq 7, length 64
+10:27:30.566089 eth1  Out IP router1 > 192.168.30.1: ICMP echo request, id 1, seq 8, length 64
+10:27:30.568191 eth1  In  IP 192.168.30.1 > router1: ICMP echo reply, id 1, seq 8, length 64
+```

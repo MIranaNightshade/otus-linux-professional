@@ -1,0 +1,96 @@
+---
+- name: OSPF
+  hosts: all
+  become: true
+  vars_files:
+    - defaults/main.yml
+  tasks:
+  
+  - name: Заменить строку в resolved.conf
+    ansible.builtin.lineinfile:
+      path: /etc/systemd/resolved.conf
+      regexp: '^#?DNSSEC='
+      line: 'DNSSEC=no'
+      state: present
+
+  - name: Перезагрузить systemd-resolved
+    ansible.builtin.systemd_service:
+      name: systemd-resolved
+      state: restarted
+
+  - name: disable ufw service
+    service:
+      name: ufw
+      state: stopped
+      enabled: false
+
+
+  - name: install base tools
+    apt:
+      name:
+        - vim
+        - traceroute
+        - tcpdump
+        - net-tools
+      state: present
+      update_cache: true
+  
+  - name: add gpg frrouting.org
+    apt_key:
+      url: "https://deb.frrouting.org/frr/keys.asc"
+      state: present
+
+
+    # Добавляем репозиторий https://deb.frrouting.org/frr
+  - name: add frr repo
+    apt_repository:
+      repo: 'deb https://deb.frrouting.org/frr {{ ansible_distribution_release }} frr-stable'
+      state: present
+  
+  # Обновляем пакеты и устанавливаем FRR
+  - name: install FRR packages
+    apt:
+      name:
+        - frr
+        - frr-pythontools
+      state: present
+      update_cache: true
+  
+  - name: base set up OSPF
+    template:
+      src: daemons
+      dest: /etc/frr/daemons
+      owner: frr
+      group: frr
+      mode: 0640
+
+ # Включаем маршрутизацию транзитных пакетов
+  - name: set up forward packages across routers
+    sysctl:
+      name: net.ipv4.conf.all.forwarding
+      value: '1'
+      state: present
+
+ # Копируем файл frr.conf на хосты, указываем владельца и права
+  - name: set up OSPF
+    template:
+      src: frr.conf.j2
+      dest: /etc/frr/frr.conf
+      owner: frr
+      group: frr
+      mode: 0640
+    notify: restart frr
+ 
+  - name: set up asynchronous routing
+    sysctl:
+      name: net.ipv4.conf.all.rp_filter
+      value: '0'
+      state: present
+    when: symmetric_routing == false
+
+  handlers:
+  - name: restart frr
+    service:
+      name: frr
+      state: restarted
+      enabled: true

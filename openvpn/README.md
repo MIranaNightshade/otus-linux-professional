@@ -85,7 +85,9 @@ verb 3
 ```
 
 На сервере и клиенте создаем systemd юнит:
+```bash
 vim /etc/systemd/system/openvpn@.service
+```
 
 ```
 [Unit] 

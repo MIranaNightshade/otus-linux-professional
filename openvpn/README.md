@@ -7,6 +7,9 @@
 1. Настроить VPN между двумя ВМ в tun/tap режимах, замерить скорость в туннелях, сделать вывод об отличающихся показателях
 2. Поднять RAS на базе OpenVPN с клиентскими сертификатами, подключиться с локальной машины на ВМ
 
+---------------------------------------------------------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------------------------------------------------
+
 **1. TUN/TAP режимы VPN**
 
 TUN работает на уровне L3, TAP работает на уровне L2. TUN передает IP пакеты, TAP ethrnet кадры. 
@@ -153,4 +156,115 @@ iperf Done.
 
 
 **2. Поднять RAS**
+
+```
+apt update
+apt install openvpn easy-rsa
+```
+
+**НАСТРОЙКА СЕРВЕРА:**
+
+Инициализируем PKI:
+
+```
+cd /etc/openvpn
+/usr/share/easy-rsa/easyrsa init-pki
+```
+
+Создадим приватный ключ и сертификат CA:
+
+```
+echo 'Easy-RSA CA' | /usr/share/easy-rsa/easyrsa build-ca nopass
+```
+
+Создадим приватный ключ и сертификат сервера openVPN:
+
+```
+echo 'rasvpn' | /usr/share/easy-rsa/easyrsa gen-req server nopass
+echo 'yes' | /usr/share/easy-rsa/easyrsa sign-req server server
+```
+
+Сгенерируем параметры для алгоритма Диффи-Хеллмана:
+
+```
+/usr/share/easy-rsa/easyrsa gen-dh
+```
+
+Создадим ta-key для генерации HMAC на этапе tls рукопожатия:
+
+```
+openvpn --genkey secret ta.key
+```
+
+Создадим конфиг сервера openVPN:
+
+vim /etc/openvpn/server.conf
+
+```
+port 1207 
+proto udp 
+dev tun
+tls-auth ta.key 0
+ca /etc/openvpn/pki/ca.crt 
+cert /etc/openvpn/pki/issued/server.crt 
+key /etc/openvpn/pki/private/server.key 
+dh /etc/openvpn/pki/dh.pem 
+server 10.10.10.0 255.255.255.0 
+ifconfig-pool-persist ipp.txt 
+client-to-client 
+client-config-dir /etc/openvpn/client 
+keepalive 10 120 
+comp-lzo 
+persist-key 
+persist-tun 
+status /var/log/openvpn-status.log 
+log /var/log/openvpn.log 
+verb 3
+```
+
+Создадим systemd unit:
+
+```
+[Unit] 
+Description=OpenVPN Tunneling Application On %I 
+After=network.target 
+[Service] 
+Type=notify 
+PrivateTmp=true 
+ExecStart=/usr/sbin/openvpn --cd /etc/openvpn/ --config %i.conf 
+[Install] 
+WantedBy=multi-user.target
+```
+**НАСТРОЙКА КЛИЕНТА:**
+
+Скопируем на клиент ta.key 
+
+На сервере создадим приватный ключ и сертификат для клиента и скопируем их на клиент.
+
+```
+echo 'client' | /usr/share/easy-rsa/easyrsa gen-req client nopass
+echo 'yes' | /usr/share/easy-rsa/easyrsa sign-req client client
+```
+
+Создадим конфиг для клиента:
+
+```
+dev tun 
+proto udp 
+remote 192.168.56.10 1207 
+client 
+resolv-retry infinite 
+remote-cert-tls server
+tls-auth ./client_keys/ta.key 1 
+ca ./client_keys/ca.crt 
+cert ./client_keys/client.crt 
+key ./client_keys/client.key 
+route 10.10.10.0 255.255.255.0 
+persist-key 
+persist-tun 
+comp-lzo 
+verb 3 
+```
+
+
 

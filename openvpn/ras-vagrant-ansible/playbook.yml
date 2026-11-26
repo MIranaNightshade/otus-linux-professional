@@ -1,0 +1,116 @@
+- name: OpenVPN
+  hosts: all
+  become: true
+  tasks:
+
+  - name: install base tools
+    apt:
+      name:
+        - openvpn
+        - easy-rsa
+      state: present
+      update_cache: true
+
+  - name: Initialize PKI
+    ansible.builtin.command:
+      cmd: /usr/share/easy-rsa/easyrsa init-pki
+      chdir: /etc/openvpn
+      creates: /etc/openvpn/pki/openssl-easyrsa.cnf
+
+
+  - name: build CA
+    ansible.builtin.shell:
+      cmd: echo 'Easy-RSA CA' | /usr/share/easy-rsa/easyrsa build-ca nopass
+      chdir: /etc/openvpn
+      creates: /etc/openvpn/pki/index.txt
+
+  
+  - name: Generate server private key 
+    ansible.builtin.shell:
+      cmd: echo 'rasvpn' | /usr/share/easy-rsa/easyrsa gen-req server nopass
+      chdir: /etc/openvpn
+      creates: /etc/openvpn/pki/private/server.key
+  
+  - name: Generate server cert 
+    ansible.builtin.shell:
+      cmd: echo 'yes' | /usr/share/easy-rsa/easyrsa sign-req server server
+      chdir: /etc/openvpn
+      creates: /etc/openvpn/pki/issued/server.crt
+
+  
+  - name: Generate dh 
+    ansible.builtin.command:
+      cmd: /usr/share/easy-rsa/easyrsa gen-dh
+      chdir: /etc/openvpn
+      creates: /etc/openvpn/pki/dh.pem 
+
+  - name: Generate PSK
+    ansible.builtin.command:
+      cmd: openvpn --genkey secret ta.key
+      chdir: /etc/openvpn
+      creates: /etc/openvpn/ta.key
+
+
+  - name: Create server.conf
+    ansible.builtin.copy:
+      src: server.conf
+      dest: /etc/openvpn/server.conf
+      mode: '0644'
+      owner: root
+      group: root
+
+
+
+  - name: copy systemd unit
+    ansible.builtin.copy:
+      src: openvpn.service
+      dest: /etc/systemd/system/openvpn@.service
+      owner: root
+      group: root
+      mode: "0644"
+    notify:
+       - Reload systemd
+       - Restart service
+
+  - name: start/enable systemd unit
+    ansible.builtin.systemd_service:
+      name: openvpn@server.service
+      enabled: true
+      state: started
+      daemon_reload: true    
+
+# Генерация ключа и сертификата для клиента. ---------------------------------------------------
+  
+  - name: Generate client private key 
+    ansible.builtin.shell:
+      cmd: echo 'client' | /usr/share/easy-rsa/easyrsa gen-req client nopass
+      chdir: /etc/openvpn
+      creates: /etc/openvpn/pki/private/client.key
+
+  - name: Generate client cert
+    ansible.builtin.shell:
+      cmd: echo 'yes' | /usr/share/easy-rsa/easyrsa sign-req client client
+      chdir: /etc/openvpn
+      creates: /etc/openvpn/pki/issued/client.crt     
+  
+  - name: Fetch cert key for client 
+    ansible.builtin.fetch:
+      src: "{{ item }}"
+      dest: "./client_keys/"
+      flat: yes
+    loop:
+      - /etc/openvpn/pki/ca.crt
+      - /etc/openvpn/pki/issued/client.crt
+      - /etc/openvpn/pki/private/client.key
+      - /etc/openvpn/ta.key
+  
+  handlers:
+
+    - name: Reload systemd
+      ansible.builtin.systemd_service:
+        daemon_reload: true
+
+    - name: Restart service
+      ansible.builtin.systemd_service:
+        name: openvpn@server.service
+        state: restarted
